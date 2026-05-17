@@ -17,7 +17,7 @@ public class Client {
     private LocalDate contractDueDate; // 合同到期时间
     private Integer elderType; // 老人类型 0:自理老人， 1:护理老人
     private Long nursingLevelId; // 护理级别ID
-    private Long healthStewardId; // 健康管家ID
+    private Long healthStewardId; // 健康管家ID1
     private Integer isDeleted; // 逻辑删除标志
     private LocalDateTime createTime;
     private LocalDateTime updateTime;
