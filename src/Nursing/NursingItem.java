@@ -20,6 +20,7 @@ public class NursingItem {
     // 逻辑删除标记
     private Boolean isDeleted = false;
 
+
     public Boolean getDeleted() {
         return isDeleted;
     }
@@ -107,6 +108,5 @@ public class NursingItem {
         this.id = id;
     }
     // 构造方法
-
 
 }

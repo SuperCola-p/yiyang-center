@@ -17,9 +17,92 @@ public class ClientNursingSetting {
     private Integer remainingQuantity;
     // 服务到期日期
     private LocalDate serviceDueDate;
-    // 服务状态: 正常、欠费、到期、未到期 (参考`5.1.8 服务关注`)
+    // 服务状态: 正常、欠费、到期、未到期
     private String serviceStatus;
     // 逻辑删除标记
     private Boolean isDeleted = false;
+
+    public ClientNursingSetting() {
+    }
+
+    public Long getNursingItemId() {
+        return nursingItemId;
+    }
+
+    public void setNursingItemId(Long nursingItemId) {
+        this.nursingItemId = nursingItemId;
+    }
+
+    public Long getClientId() {
+        return clientId;
+    }
+
+    public void setClientId(Long clientId) {
+        this.clientId = clientId;
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public Boolean getDeleted() {
+        return isDeleted;
+    }
+
+    public void setDeleted(Boolean deleted) {
+        isDeleted = deleted;
+    }
+
+    public String getServiceStatus() {
+        return serviceStatus;
+    }
+
+    public void setServiceStatus(String serviceStatus) {
+        this.serviceStatus = serviceStatus;
+    }
+
+    public LocalDate getServiceDueDate() {
+        return serviceDueDate;
+    }
+
+    public void setServiceDueDate(LocalDate serviceDueDate) {
+        this.serviceDueDate = serviceDueDate;
+    }
+
+    public Integer getRemainingQuantity() {
+        return remainingQuantity;
+    }
+
+    public void setRemainingQuantity(Integer remainingQuantity) {
+        this.remainingQuantity = remainingQuantity;
+    }
+
+    public Integer getTotalQuantity() {
+        return totalQuantity;
+    }
+
+    public void setTotalQuantity(Integer totalQuantity) {
+        this.totalQuantity = totalQuantity;
+    }
+
+    public LocalDate getPurchaseDate() {
+        return purchaseDate;
+    }
+
+    public void setPurchaseDate(LocalDate purchaseDate) {
+        this.purchaseDate = purchaseDate;
+    }
+
+    public Long getNursingLevelId() {
+        return nursingLevelId;
+    }
+
+    public void setNursingLevelId(Long nursingLevelId) {
+        this.nursingLevelId = nursingLevelId;
+    }
 
 }

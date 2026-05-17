@@ -2,6 +2,7 @@ package Nursing;// Nursing.NursingRecord.java
 import java.time.LocalDateTime;
 
 public class NursingRecord {
+    private NursingRecord(){};
     private Long id;
     // 客户ID
     private Long clientId;
@@ -16,5 +17,59 @@ public class NursingRecord {
     // 逻辑删除标记
     private Boolean isDeleted = false;
 
-    // 构造方法、Getter和Setter省略...
+    public Boolean getDeleted() {
+        return isDeleted;
+    }
+
+    public void setDeleted(Boolean deleted) {
+        isDeleted = deleted;
+    }
+
+    public Integer getExecQuantity() {
+        return execQuantity;
+    }
+
+    public void setExecQuantity(Integer execQuantity) {
+        this.execQuantity = execQuantity;
+    }
+
+    public LocalDateTime getNursingTime() {
+        return nursingTime;
+    }
+
+    public void setNursingTime(LocalDateTime nursingTime) {
+        this.nursingTime = nursingTime;
+    }
+
+    public Long getHealthAssistantId() {
+        return healthAssistantId;
+    }
+
+    public void setHealthAssistantId(Long healthAssistantId) {
+        this.healthAssistantId = healthAssistantId;
+    }
+
+    public Long getNursingItemId() {
+        return nursingItemId;
+    }
+
+    public void setNursingItemId(Long nursingItemId) {
+        this.nursingItemId = nursingItemId;
+    }
+
+    public Long getClientId() {
+        return clientId;
+    }
+
+    public void setClientId(Long clientId) {
+        this.clientId = clientId;
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
 }
