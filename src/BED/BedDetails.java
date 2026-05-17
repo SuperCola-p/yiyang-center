@@ -4,7 +4,6 @@ import java.util.Date;
 
 /**
  * 床位详细信息表 (beddetails)
- *
  * 存储床位详细信息
  */
 public class BedDetails implements Serializable {
