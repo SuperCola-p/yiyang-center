@@ -1,17 +1,17 @@
 import java.util.ArrayList;
+import java.util.Iterator;
 
 public class Service {
     public class healthManager{
         private String name;
         private String password;
-        ArrayList<Customer> customer=new ArrayList<>();
+        ArrayList<Customer> customers=new ArrayList<>();
         void addCustomer(Customer customer){
-            this.customer.add(customer);
+            this.customers.add(customer);
         }
         void removeCusomer(Customer customer){
-            this.customer.remove(customer);
+            this.customers.remove(customer);
         }
-
         void setName(String name){
             this.name=name;
         }
@@ -24,6 +24,14 @@ public class Service {
         String getPassword(){
             return this.password;
         }
-
+        Customer searchCustomer(Customer customer){
+            Iterator<Customer> it=customers.iterator();
+            while (it.hasNext()){
+                if(customer.equals(it.next())){
+                    return it.next();
+                }
+            }
+            return null;
+        }
     }
 }
