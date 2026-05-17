@@ -2,7 +2,8 @@ package BED;
 import java.io.Serializable;
 
 /**
- * 床位表 (bed)
+ * 床位表 (bed)dnys
+ * 存储房间床位信息
  * 存储房间床位信息
  */
 public class Bed implements Serializable {
