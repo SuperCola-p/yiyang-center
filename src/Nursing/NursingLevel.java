@@ -1,22 +1,24 @@
-package Nursing;// Nursing.NursingLevel.java
+package Nursing;
 
-import java.util.List;
+import java.util.Iterator;
 
-public class NursingLevel {
+public class NursingLevel implements Iterable<NursingItem> { // 实现接口
     private Long id;
-    // 护理级别名称
     private String levelName;
-    // 状态: 启用/停用
     private String status;
-    // 该级别下配置的护理项目列表
-    private List<NursingItem> nursingItems;
+    // 类型改为 NursingItemArray
+    private NursingItemArray nursingItems = new NursingItemArray();
 
-    public List<NursingItem> getNursingItems() {
+    public NursingItemArray getNursingItems() {
         return nursingItems;
     }
-
-    public void setNursingItems(List<NursingItem> nursingItems) {
+    public void setNursingItems(NursingItemArray nursingItems) {
         this.nursingItems = nursingItems;
+    }
+
+    @Override
+    public Iterator<NursingItem> iterator() {
+        return nursingItems.iterator();
     }
 
     public String getStatus() {
