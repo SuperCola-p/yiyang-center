@@ -107,4 +107,6 @@ public class NursingItem {
         this.id = id;
     }
     // 构造方法
+
+
 }
