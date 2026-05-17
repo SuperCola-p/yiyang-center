@@ -1,4 +1,4 @@
-// NursingItem.java
+package Nursing;// Nursing.NursingItem.java
 import java.math.BigDecimal;
 
 public class NursingItem {
@@ -26,7 +26,7 @@ public class NursingItem {
 
     @Override
     public String toString() {
-        return "NursingItem{" +
+        return "Nursing.NursingItem{" +
                 "id=" + id +
                 ", code='" + code + '\'' +
                 ", name='" + name + '\'' +

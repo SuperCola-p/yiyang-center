@@ -1,4 +1,5 @@
-// NursingLevel.java
+package Nursing;// Nursing.NursingLevel.java
+
 import java.util.List;
 
 public class NursingLevel {
