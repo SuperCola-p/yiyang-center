@@ -1,5 +1,5 @@
-package data;
-import entity.admin;
+package java.data;
+import java.entity.admin;
 
 public class adminData {
     admin admin1= new admin("admin","admin","NEUSOFTadmin1");
