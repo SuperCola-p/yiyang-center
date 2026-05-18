@@ -1,4 +1,4 @@
-package java.BED;
+package java.entity;
 import java.io.Serializable;
 
 /**

@@ -1,5 +1,6 @@
-package java.Nursing;
+package java.controller;
 
+import java.entity.ClientNursingSetting;
 import java.entity.NursingItem;
 import java.entity.NursingLevel;
 import java.math.BigDecimal;

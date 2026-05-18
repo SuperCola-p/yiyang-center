@@ -1,6 +1,5 @@
-package java.Nursing;
+package java.entity;
 
-import java.entity.NursingItem;
 import java.util.ArrayList;
 import java.util.Iterator;
 

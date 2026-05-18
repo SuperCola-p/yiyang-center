@@ -1,5 +1,6 @@
 package java.BED;
 
+import java.entity.Bed;
 import java.util.ArrayList;
 import java.util.Date;
 
