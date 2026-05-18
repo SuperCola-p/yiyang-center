@@ -1,8 +1,13 @@
 package java.entity;
-
+import java.time.LocalDate;
+import java.time.Period;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
 import java.io.Serializable;
 
 public class Operator implements Serializable{
+
 
     private static final long serialVersionUID = 1L;
     private String loginCode;
