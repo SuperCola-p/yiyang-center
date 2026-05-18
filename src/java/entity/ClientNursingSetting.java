@@ -1,4 +1,4 @@
-package java.Nursing;// java.Nursing.ClientNursingSetting.java
+package java.entity;// java.entity.ClientNursingSetting.java
 import java.time.LocalDate;
 
 public class ClientNursingSetting {

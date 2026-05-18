@@ -1,5 +1,8 @@
-package java.BED;
+package java.controller;
 
+import java.BED.BedDetails;
+import java.BED.Customer;
+import java.entity.Bed;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
