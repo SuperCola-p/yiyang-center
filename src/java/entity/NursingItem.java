@@ -1,4 +1,4 @@
-package java.Nursing;// java.Nursing.NursingItem.java
+package java.entity;// java.entity.NursingItem.java
 import java.math.BigDecimal;
 
 public class NursingItem {
@@ -27,7 +27,7 @@ public class NursingItem {
 
     @Override
     public String toString() {
-        return "java.Nursing.NursingItem{" +
+        return "java.entity.NursingItem{" +
                 "id=" + id +
                 ", code='" + code + '\'' +
                 ", name='" + name + '\'' +

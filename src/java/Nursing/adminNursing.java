@@ -1,5 +1,7 @@
 package java.Nursing;
 
+import java.entity.NursingItem;
+import java.entity.NursingLevel;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.Scanner;
