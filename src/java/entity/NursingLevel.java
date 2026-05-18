@@ -1,5 +1,6 @@
-package java.Nursing;
+package java.entity;
 
+import java.Nursing.NursingItemArray;
 import java.util.Iterator;
 
 public class NursingLevel implements Iterable<NursingItem> { // 实现接口
