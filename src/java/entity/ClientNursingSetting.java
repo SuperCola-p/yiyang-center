@@ -1,7 +1,8 @@
 package java.entity;// java.entity.ClientNursingSetting.java
+import java.io.Serializable;
 import java.time.LocalDate;
 
-public class ClientNursingSetting {
+public class ClientNursingSetting implements Serializable {
     private Long id;
     // 客户ID
     private Long clientId;

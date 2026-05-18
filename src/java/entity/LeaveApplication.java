@@ -1,6 +1,8 @@
 package java.entity;
 
-public class LeaveApplication {
+import java.io.Serializable;
+
+public class LeaveApplication implements Serializable {
     private String reason;
     private String time;
     private String predictedEnd;

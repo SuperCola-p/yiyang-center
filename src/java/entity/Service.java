@@ -1,9 +1,10 @@
 package java.entity;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Iterator;
 
-public class Service extends Operator{
+public class Service extends Operator implements Serializable {
         private ArrayList<Client> customers=new ArrayList<>();
         void addCustomer(Client customer){
             this.customers.add(customer);
