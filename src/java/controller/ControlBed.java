@@ -1,8 +1,9 @@
 package java.controller;
 
-import java.BED.Customer;
+import java.mapper.Customer;
 import java.entity.Bed;
-import java.entity.admin;
+import java.entity.BedDetails;
+
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -14,7 +15,7 @@ public class ControlBed {
     private Customer customer;
     private ArrayList<Bed> beds;
     private ArrayList<Customer> customers;
-    
+
     private static final String DEFAULT_BUILDING = "606";
 
     public ControlBed() {
@@ -35,80 +36,14 @@ public class ControlBed {
         this.customers = new ArrayList<>();
     }
 
-    public void controlBedDisplay() {
-        System.out.println("choice");
-        System.out.println("1.查询床位信息");
-        System.out.println("2.修改床位信息");
-        System.out.println("3.床位调换");
-    }
+
 
     public enum UsageStatus {
         CURRENT,
         HISTORY
     }
 
-    /**
-     * 查询客户床位使用详情列表（默认查询正在使用的）
-     *
-     * @param customerName 客户姓名（模糊匹配）
-     * @param checkInDate  入住日期
-     * @param status       使用状态（null表示默认查询正在使用的）
-     * @return 匹配的床位使用详情列表
-     */
-    public List<admin.BedDetails> queryBedDetails(String customerName, Date checkInDate, UsageStatus status) {
-        UsageStatus currentStatus = status;
-        if (currentStatus == null) {
-            currentStatus = UsageStatus.CURRENT;
-        }
 
-        final UsageStatus effectiveStatus = currentStatus;
-
-        return customers.stream()
-                .flatMap(c -> {
-                    ArrayList<admin.BedDetails> detailsList = c.getBedDetailsList();
-                    if (detailsList == null || detailsList.isEmpty()) {
-                        return List.<admin.BedDetails>of().stream();
-                    }
-                    return detailsList.stream();
-                })
-                .filter(details -> {
-                    Date now = new Date();
-                    boolean isCurrent = details.getEndDate() == null || details.getEndDate().after(now);
-
-                    if (effectiveStatus == UsageStatus.CURRENT && !isCurrent) {
-                        return false;
-                    }
-                    if (effectiveStatus == UsageStatus.HISTORY && isCurrent) {
-                        return false;
-                    }
-                    return true;
-                })
-                .filter(details -> {
-                    if (customerName == null || customerName.isEmpty()) {
-                        return true;
-                    }
-                    for (Customer c : customers) {
-                        ArrayList<admin.BedDetails> list = c.getBedDetailsList();
-                        if (list != null) {
-                            for (admin.BedDetails bd : list) {
-                                if (bd.getId() != null && bd.getId().equals(details.getId())) {
-                                    String name = c.getName();
-                                    return name != null && name.contains(customerName);
-                                }
-                            }
-                        }
-                    }
-                    return false;
-                })
-                .filter(details -> {
-                    if (checkInDate == null) {
-                        return true;
-                    }
-                    Date startDate = details.getStartDate();
-                    return startDate != null && startDate.equals(checkInDate);
-                })
-                .collect(Collectors.toList());
-    }
 
     /**
      * 修改床位详情：只能修改床位使用的结束时间
@@ -119,9 +54,9 @@ public class ControlBed {
      */
     public boolean modifyBedEndDate(Integer bedDetailsId, Date newEndDate) {
         for (Customer c : customers) {
-            ArrayList<admin.BedDetails> detailsList = c.getBedDetailsList();
+            ArrayList<BedDetails> detailsList = c.getBedDetailsList();
             if (detailsList != null) {
-                for (admin.BedDetails details : detailsList) {
+                for (BedDetails details : detailsList) {
                     if (details.getId() != null && details.getId().equals(bedDetailsId)) {
                         details.setEndDate(newEndDate);
                         return true;
@@ -153,7 +88,7 @@ public class ControlBed {
             return false;
         }
 
-        admin.BedDetails currentDetails = targetCustomer.getCurrentBedDetails();
+        BedDetails currentDetails = targetCustomer.getCurrentBedDetails();
         if (currentDetails == null) {
             return false;
         }
@@ -180,7 +115,7 @@ public class ControlBed {
 
         currentDetails.setEndDate(now);
 
-        admin.BedDetails newDetails = new admin.BedDetails();
+        BedDetails newDetails = new BedDetails();
         newDetails.setStartDate(now);
         newDetails.setCustomerId(currentDetails.getCustomerId());
         newDetails.setBedId(newBed.getId());
@@ -257,6 +192,7 @@ public class ControlBed {
         }
         return beds.stream()
                 .filter(bed -> building.equals(bed.getBuilding()))
+
                 .filter(bed -> roomNo.equals(bed.getRoomNo()))
                 .collect(Collectors.toList());
     }
