@@ -1,10 +1,12 @@
-public class goingOutSigned {
+package java.entity;
+
+public class LeaveApplication {
     private String reason;
     private String time;
     private String predictedEnd;
     private String statue;
     private String end;
-    public goingOutSigned(String reason,String time,String predictedEnd){
+    public LeaveApplication(String reason, String time, String predictedEnd){
         this.time=time;
         this.reason=reason;
         this.predictedEnd=predictedEnd;
