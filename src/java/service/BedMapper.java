@@ -1,4 +1,4 @@
-package java.mapper;
+package java.service;
 
 import java.entity.Bed;
 import java.entity.BedDetails;
