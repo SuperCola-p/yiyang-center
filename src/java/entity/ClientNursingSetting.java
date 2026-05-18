@@ -106,7 +106,5 @@ public class ClientNursingSetting implements Serializable {
         this.nursingLevelId = nursingLevelId;
     }
 
-    public String toString() {
-        return getName()+"_"+getId()+"_"+getClientId();
-    }
+
 }

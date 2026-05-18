@@ -4,7 +4,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Iterator;
 
-public class NursingItemArray implements Iterable<NursingItem>, Serializable {
+public class NursingItemArray implements Iterable<NursingItem> , Serializable {
     private ArrayList<NursingItem> items;
     public NursingItemArray() {
         items = new ArrayList<>();

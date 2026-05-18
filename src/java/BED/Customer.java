@@ -1,6 +1,7 @@
 package java.BED;
 
 import java.entity.Bed;
+import java.entity.admin;
 import java.util.ArrayList;
 import java.util.Date;
 
@@ -18,7 +19,7 @@ public class Customer {
     /**
      * 床位使用详情列表（一个客户可以有多个床位使用记录）
      */
-    private ArrayList<BedDetails> bedDetailsList;
+    private ArrayList<admin.BedDetails> bedDetailsList;
 
     public Customer() {
         bed = new Bed();
@@ -41,20 +42,20 @@ public class Customer {
         this.bed = bed;
     }
 
-    public ArrayList<BedDetails> getBedDetailsList() {
+    public ArrayList<admin.BedDetails> getBedDetailsList() {
         return bedDetailsList;
     }
 
-    public void setBedDetailsList(ArrayList<BedDetails> bedDetailsList) {
+    public void setBedDetailsList(ArrayList<admin.BedDetails> bedDetailsList) {
         this.bedDetailsList = bedDetailsList;
     }
 
     /**
      * 获取当前正在使用的床位详情
      */
-    public BedDetails getCurrentBedDetails() {
+    public admin.BedDetails getCurrentBedDetails() {
         Date now = new Date();
-        for (BedDetails details : bedDetailsList) {
+        for (admin.BedDetails details : bedDetailsList) {
             if (details.getEndDate() == null || details.getEndDate().after(now)) {
                 return details;
             }
@@ -65,7 +66,7 @@ public class Customer {
     /**
      * 添加床位使用详情
      */
-    public void addBedDetails(BedDetails bedDetails) {
+    public void addBedDetails(admin.BedDetails bedDetails) {
         this.bedDetailsList.add(bedDetails);
     }
 }
