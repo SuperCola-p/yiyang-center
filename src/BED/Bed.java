@@ -2,8 +2,7 @@ package BED;
 import java.io.Serializable;
 
 /**
- * 床位表 (bed)dnys
- * 存储房间床位信息
+ * 床位表 (bed)
  * 存储房间床位信息
  */
 public class Bed implements Serializable {
@@ -14,6 +13,11 @@ public class Bed implements Serializable {
      * 主键
      */
     private Integer id;
+
+    /**
+     * 楼号
+     */
+    private String building;
 
     /**
      * 房间编号
@@ -43,6 +47,14 @@ public class Bed implements Serializable {
 
     public void setId(Integer id) {
         this.id = id;
+    }
+
+    public String getBuilding() {
+        return building;
+    }
+
+    public void setBuilding(String building) {
+        this.building = building;
     }
 
     public Integer getRoomNo() {
@@ -81,6 +93,7 @@ public class Bed implements Serializable {
     public String toString() {
         return "Bed{" +
                 "id=" + id +
+                ", building='" + building + '\'' +
                 ", roomNo=" + roomNo +
                 ", bedStatus=" + bedStatus +
                 ", remarks='" + remarks + '\'' +
