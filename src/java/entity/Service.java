@@ -5,20 +5,23 @@ import java.util.ArrayList;
 import java.util.Iterator;
 
 public class Service extends Operator implements Serializable {
-    private ArrayList<Client> customers=new ArrayList<>();
-    void addCustomer(Client customer){
-        this.customers.add(customer);
+    private ArrayList<Client> clients=new ArrayList<>();
+    void addCustomer(Client client){
+        this.clients.add(client);
     }
-    void removeCusomer(Client customer){
-        this.customers.remove(customer);
+    void removeCusomer(Client client){
+        this.clients.remove(client);
     }
-    Client searchCustomer(Client customer){
-        Iterator<Client> it=customers.iterator();
+    Client searchCustomer(Client client){
+        Iterator<Client> it=clients.iterator();
         while (it.hasNext()){
-            if(customer.equals(it.next())){
+            if(client.equals(it.next())){
                 return it.next();
             }
         }
         return null;
+    }
+    void AddCheckOutApplication(Client client,checkOutApplication checkOutApplication){
+        client.addCheckOutApplication(checkOutApplication);
     }
 }

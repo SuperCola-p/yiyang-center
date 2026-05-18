@@ -1,6 +1,7 @@
 package java.entity;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 
 public class Client implements Serializable {
     private Integer id;                 // 序号（主键ID）
@@ -19,6 +20,7 @@ public class Client implements Serializable {
     private String nurse;               // 护工
     private String healthStatus;        // 身心状况
     private String type;                // 老人类型：自理老人/护理老人
+    private ArrayList<checkOutApplication> checkOutApplications=new ArrayList<>();
 
     // 无参构造
     public Client() {}
@@ -94,6 +96,15 @@ public class Client implements Serializable {
 
     public String getType() { return type; }
     public void setType(String type) { this.type = type; }
+
+    public void addCheckOutApplication(checkOutApplication checkOutApplication){
+        checkOutApplications.add(checkOutApplication);
+    }
+    public void showAddCheckOutApplication(){
+        for(int i=0;i<checkOutApplications.size();i++){
+            System.out.println(checkOutApplications.get(i).toString());
+        }
+    }
 
     // 重写toString（方便打印和调试）
     @Override
