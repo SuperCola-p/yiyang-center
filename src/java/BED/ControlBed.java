@@ -1,4 +1,4 @@
-package BED;
+package java.BED;
 
 import java.util.ArrayList;
 import java.util.Date;

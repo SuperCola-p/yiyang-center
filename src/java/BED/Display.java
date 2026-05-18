@@ -1,4 +1,4 @@
-package BED;
+package java.BED;
 
 public interface Display {
     void displayAllBed();

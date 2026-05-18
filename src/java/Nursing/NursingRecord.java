@@ -1,4 +1,4 @@
-package Nursing;// Nursing.NursingRecord.java
+package java.Nursing;// java.Nursing.NursingRecord.java
 import java.time.LocalDateTime;
 
 public class NursingRecord {

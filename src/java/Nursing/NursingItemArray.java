@@ -1,6 +1,4 @@
-package Nursing;
-
-import BED.Display;
+package java.Nursing;
 
 import java.util.ArrayList;
 import java.util.Iterator;

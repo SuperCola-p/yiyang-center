@@ -1,4 +1,4 @@
-package Nursing;
+package java.Nursing;
 
 import java.util.Iterator;
 
