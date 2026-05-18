@@ -1,8 +1,9 @@
 package java.entity;
 
+import java.io.Serializable;
 import java.util.Iterator;
 
-public class NursingLevel implements Iterable<NursingItem> { // 实现接口
+public class NursingLevel implements Iterable<NursingItem> , Serializable { // 实现接口
     private Long id;
     private String levelName;
     private String status;

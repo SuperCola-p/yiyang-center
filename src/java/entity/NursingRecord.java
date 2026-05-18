@@ -1,7 +1,8 @@
 package java.entity;// java.entity.NursingRecord.java
+import java.io.Serializable;
 import java.time.LocalDateTime;
 
-public class NursingRecord {
+public class NursingRecord implements Serializable {
     private NursingRecord(){};
     private Long id;
     // 客户ID

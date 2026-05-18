@@ -1,7 +1,8 @@
 package java.entity;// java.entity.NursingItem.java
+import java.io.Serializable;
 import java.math.BigDecimal;
 
-public class NursingItem {
+public class NursingItem implements Serializable {
     private Long id;
     // 编号
     private String code;

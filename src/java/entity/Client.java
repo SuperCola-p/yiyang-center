@@ -1,6 +1,8 @@
 package java.entity;
 
-public class Client {
+import java.io.Serializable;
+
+public class Client implements Serializable {
     private Integer id;                 // 序号（主键ID）
     private String name;                // 客户姓名
     private String gender;              // 性别

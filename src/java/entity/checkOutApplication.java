@@ -1,6 +1,8 @@
 package java.entity;
 
-public class checkOutApplication {
+import java.io.Serializable;
+
+public class checkOutApplication implements Serializable {
     private String type;
     private String reason;
     private String time;
