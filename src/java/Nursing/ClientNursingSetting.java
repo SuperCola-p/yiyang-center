@@ -1,4 +1,4 @@
-package Nursing;// Nursing.ClientNursingSetting.java
+package java.Nursing;// java.Nursing.ClientNursingSetting.java
 import java.time.LocalDate;
 
 public class ClientNursingSetting {
@@ -105,4 +105,7 @@ public class ClientNursingSetting {
         this.nursingLevelId = nursingLevelId;
     }
 
+    public String toString() {
+        return getName()+"_"+getId()+"_"+getClientId();
+    }
 }
