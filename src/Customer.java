@@ -122,4 +122,7 @@ public class Customer {
         this.nursingLevelId = nursingLevelId;
     }
 
+    public String toString() {
+        return getName()+"_"+getId()+"_"+getClientId();
+    }
 }
