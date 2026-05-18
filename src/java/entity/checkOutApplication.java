@@ -13,4 +13,7 @@ public class checkOutApplication implements Serializable {
         this.reason = reason;
         this.statue = statue;
     }
+    public String toString(){
+        return this.type+"_"+this.reason+"_"+this.time+"_"+this.statue;
+    }
 }
