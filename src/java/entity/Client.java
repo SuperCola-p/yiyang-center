@@ -1,6 +1,9 @@
 package java.entity;
 
+import java.entity.BedDetails;
+import java.entity.Bed;
 import java.io.Serializable;
+import java.util.Date;
 import java.util.ArrayList;
 
 public class Client implements Serializable {
@@ -21,15 +24,19 @@ public class Client implements Serializable {
     private String healthStatus;        // 身心状况
     private String type;                // 老人类型：自理老人/护理老人
     private ArrayList<checkOutApplication> checkOutApplications=new ArrayList<>();
-
+    private Bed bed;
+    private ArrayList<java.entity.BedDetails> bedDetailsList;
     // 无参构造
-    public Client() {}
+    public Client() {
+        bedDetailsList = new ArrayList<>();
+        bed = new Bed();
+    }
 
     // 全参构造
     public Client(Integer id, String name, String gender, String bloodType, String phone,
                   String familyContact, String idCard, String buildingNo, String roomNo,
                   String bedNo, String birthday, String checkInDate, String nursingLevel,
-                  String nurse, String healthStatus, String type) {
+                  String nurse, String healthStatus, String type,Bed bed) {
         this.id = id;
         this.name = name;
         this.gender = gender;
@@ -46,6 +53,8 @@ public class Client implements Serializable {
         this.nurse = nurse;
         this.healthStatus = healthStatus;
         this.type = type;
+        this.bed = bed;
+        bedDetailsList = new ArrayList<>();
     }
 
     // Getter/Setter 方法
@@ -105,7 +114,36 @@ public class Client implements Serializable {
             System.out.println(checkOutApplications.get(i).toString());
         }
     }
+    public void addBedDetails(java.entity.BedDetails bedDetails){
+        bedDetailsList.add(bedDetails);
+    }
 
+
+    public Bed getBed() { return bed; }
+    public void setBed(Bed bed) { this.bed = bed; }
+
+    public ArrayList<java.entity.BedDetails> getBedDetailsList() { return bedDetailsList; }
+    public void setBedDetailsList(ArrayList<java.entity.BedDetails> bedDetailsList) { this.bedDetailsList = bedDetailsList; }
+
+    /**
+     * 获取当前正在使用的床位详情
+     */
+    public java.entity.BedDetails getCurrentBedDetails() {
+        Date now = new Date();
+        for (java.entity.BedDetails details : bedDetailsList) {
+            if (details.getEndDate() == null || details.getEndDate().after(now)) {
+                return details;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * 添加床位使用详情
+     */
+    public void addNewBedDetails(java.entity.BedDetails bedDetails) {
+        this.bedDetailsList.add(bedDetails);
+    }
     // 重写toString（方便打印和调试）
     @Override
     public String toString() {

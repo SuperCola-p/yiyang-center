@@ -1,6 +1,6 @@
 package java.controller;
 
-import java.mapper.Customer;
+import java.entity.Client;
 import java.entity.Bed;
 import java.entity.BedDetails;
 
@@ -12,19 +12,19 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 public class ControlBed {
-    private Customer customer;
+    private Client customer;
     private ArrayList<Bed> beds;
-    private ArrayList<Customer> customers;
+    private ArrayList<Client> customers;
 
     private static final String DEFAULT_BUILDING = "606";
 
     public ControlBed() {
-        this.customer = new Customer();
+        this.customer = new Client();
         this.beds = new ArrayList<>();
         this.customers = new ArrayList<>();
     }
 
-    public ControlBed(Customer customer) {
+    public ControlBed(Client customer) {
         this.customer = customer;
         this.beds = new ArrayList<>();
         this.customers = new ArrayList<>();
@@ -32,7 +32,7 @@ public class ControlBed {
 
     public ControlBed(ArrayList<Bed> beds) {
         this.beds = beds;
-        this.customer = new Customer();
+        this.customer = new Client();
         this.customers = new ArrayList<>();
     }
 
@@ -53,7 +53,7 @@ public class ControlBed {
      * @return 是否修改成功
      */
     public boolean modifyBedEndDate(Integer bedDetailsId, Date newEndDate) {
-        for (Customer c : customers) {
+        for (Client c : customers) {
             ArrayList<BedDetails> detailsList = c.getBedDetailsList();
             if (detailsList != null) {
                 for (BedDetails details : detailsList) {
@@ -77,8 +77,8 @@ public class ControlBed {
     public boolean swapBed(String customerName, String newBedNo) {
         Date now = new Date();
 
-        Customer targetCustomer = null;
-        for (Customer c : customers) {
+        Client targetCustomer = null;
+        for (Client c : customers) {
             if (c.getName() != null && c.getName().equals(customerName)) {
                 targetCustomer = c;
                 break;
@@ -88,7 +88,18 @@ public class ControlBed {
             return false;
         }
 
-        BedDetails currentDetails = targetCustomer.getCurrentBedDetails();
+        Client targetClient = null;
+        for (Client c : customers) {
+            if (c.getName() != null && c.getName().equals(customerName)) {
+                targetClient = c;
+                break;
+            }
+        }
+        if (targetClient == null) {
+            return false;
+        }
+
+        BedDetails currentDetails = targetClient.getCurrentBedDetails();
         if (currentDetails == null) {
             return false;
         }
@@ -107,7 +118,8 @@ public class ControlBed {
 
         Bed oldBed = null;
         for (Bed bed : beds) {
-            if (bed.getId() != null && bed.getId().equals(currentDetails.getBedId())) {
+            if (bed.getBuilding() != null && bed.getBuilding().equals(DEFAULT_BUILDING)
+                    && bed.getId() != null && bed.getId().equals(currentDetails.getBedId())) {
                 oldBed = bed;
                 break;
             }
@@ -118,8 +130,8 @@ public class ControlBed {
         BedDetails newDetails = new BedDetails();
         newDetails.setStartDate(now);
         newDetails.setCustomerId(currentDetails.getCustomerId());
-        newDetails.setBedId(newBed.getId());
-        targetCustomer.addBedDetails(newDetails);
+        newDetails.setBedId(newBed.getId().intValue());
+        targetCustomer.addNewBedDetails(newDetails);
 
         if (oldBed != null) {
             oldBed.setBedStatus(1);
@@ -188,7 +200,9 @@ public class ControlBed {
      */
     public List<Bed> getBedsByBuildingAndRoomNo(String building, Integer roomNo) {
         if (building == null) {
-            building = DEFAULT_BUILDING;
+            final String finalBuilding = DEFAULT_BUILDING;
+            final String finalBuildingForFilter = finalBuilding;
+            final String effectiveBuilding = finalBuilding;
         }
         return beds.stream()
                 .filter(bed -> building.equals(bed.getBuilding()))
@@ -219,7 +233,7 @@ public class ControlBed {
      */
     public List<Bed> getAvailableBedsByBuildingAndRoomNo(String building, Integer roomNo) {
         if (building == null) {
-            building = DEFAULT_BUILDING;
+            final String effectiveBuilding = DEFAULT_BUILDING;
         }
         return beds.stream()
                 .filter(bed -> building.equals(bed.getBuilding()))
@@ -228,11 +242,11 @@ public class ControlBed {
                 .collect(Collectors.toList());
     }
 
-    public Customer getCustomer() {
+    public Client getCustomer() {
         return customer;
     }
 
-    public void setCustomer(Customer customer) {
+    public void setCustomer(Client customer) {
         this.customer = customer;
     }
 
@@ -244,11 +258,11 @@ public class ControlBed {
         this.beds = beds;
     }
 
-    public ArrayList<Customer> getCustomers() {
+    public ArrayList<Client> getCustomers() {
         return customers;
     }
 
-    public void setCustomers(ArrayList<Customer> customers) {
+    public void setCustomers(ArrayList<Client> customers) {
         this.customers = customers;
     }
 }
