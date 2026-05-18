@@ -14,6 +14,16 @@ public class NursingRecord implements Serializable {
     // 护理执行时间
     private LocalDateTime nursingTime;
     // 本次护理消耗的数量
+    private String remarks;
+
+    public String getRemarks() {
+        return remarks;
+    }
+
+    public void setRemarks(String remarks) {
+        this.remarks = remarks;
+    }
+
     private Integer execQuantity;
     // 逻辑删除标记
     private Boolean isDeleted = false;
