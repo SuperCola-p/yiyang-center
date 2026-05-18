@@ -1,8 +1,8 @@
 package java.controller;
 
-import java.BED.BedDetails;
 import java.BED.Customer;
 import java.entity.Bed;
+import java.entity.admin;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -55,7 +55,7 @@ public class ControlBed {
      * @param status       使用状态（null表示默认查询正在使用的）
      * @return 匹配的床位使用详情列表
      */
-    public List<BedDetails> queryBedDetails(String customerName, Date checkInDate, UsageStatus status) {
+    public List<admin.BedDetails> queryBedDetails(String customerName, Date checkInDate, UsageStatus status) {
         UsageStatus currentStatus = status;
         if (currentStatus == null) {
             currentStatus = UsageStatus.CURRENT;
@@ -65,9 +65,9 @@ public class ControlBed {
 
         return customers.stream()
                 .flatMap(c -> {
-                    ArrayList<BedDetails> detailsList = c.getBedDetailsList();
+                    ArrayList<admin.BedDetails> detailsList = c.getBedDetailsList();
                     if (detailsList == null || detailsList.isEmpty()) {
-                        return List.<BedDetails>of().stream();
+                        return List.<admin.BedDetails>of().stream();
                     }
                     return detailsList.stream();
                 })
@@ -88,9 +88,9 @@ public class ControlBed {
                         return true;
                     }
                     for (Customer c : customers) {
-                        ArrayList<BedDetails> list = c.getBedDetailsList();
+                        ArrayList<admin.BedDetails> list = c.getBedDetailsList();
                         if (list != null) {
-                            for (BedDetails bd : list) {
+                            for (admin.BedDetails bd : list) {
                                 if (bd.getId() != null && bd.getId().equals(details.getId())) {
                                     String name = c.getName();
                                     return name != null && name.contains(customerName);
@@ -119,9 +119,9 @@ public class ControlBed {
      */
     public boolean modifyBedEndDate(Integer bedDetailsId, Date newEndDate) {
         for (Customer c : customers) {
-            ArrayList<BedDetails> detailsList = c.getBedDetailsList();
+            ArrayList<admin.BedDetails> detailsList = c.getBedDetailsList();
             if (detailsList != null) {
-                for (BedDetails details : detailsList) {
+                for (admin.BedDetails details : detailsList) {
                     if (details.getId() != null && details.getId().equals(bedDetailsId)) {
                         details.setEndDate(newEndDate);
                         return true;
@@ -153,7 +153,7 @@ public class ControlBed {
             return false;
         }
 
-        BedDetails currentDetails = targetCustomer.getCurrentBedDetails();
+        admin.BedDetails currentDetails = targetCustomer.getCurrentBedDetails();
         if (currentDetails == null) {
             return false;
         }
@@ -180,7 +180,7 @@ public class ControlBed {
 
         currentDetails.setEndDate(now);
 
-        BedDetails newDetails = new BedDetails();
+        admin.BedDetails newDetails = new admin.BedDetails();
         newDetails.setStartDate(now);
         newDetails.setCustomerId(currentDetails.getCustomerId());
         newDetails.setBedId(newBed.getId());
