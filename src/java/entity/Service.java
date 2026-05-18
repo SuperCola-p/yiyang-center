@@ -4,16 +4,16 @@ import java.util.ArrayList;
 import java.util.Iterator;
 
 public class Service extends Operator{
-        private ArrayList<Customer> customers=new ArrayList<>();
-        void addCustomer(Customer customer){
+        private ArrayList<Client> customers=new ArrayList<>();
+        void addCustomer(Client customer){
             this.customers.add(customer);
         }
-        void removeCusomer(Customer customer){
+        void removeCusomer(Client customer){
             this.customers.remove(customer);
         }
 
-        Customer searchCustomer(Customer customer){
-            Iterator<Customer> it=customers.iterator();
+        Client searchCustomer(Client customer){
+            Iterator<Client> it=customers.iterator();
             while (it.hasNext()){
                 if(customer.equals(it.next())){
                     return it.next();
