@@ -53,7 +53,7 @@ spring:
   datasource:
     url: jdbc:mysql://localhost:3306/yiyang_center?...
     username: root        # 你的 MySQL 用户名
-    password: djb0928djb       # 你的 MySQL 密码
+    password: 11111       # 你的 MySQL 密码
 ```
 
 ### 3. 编译
