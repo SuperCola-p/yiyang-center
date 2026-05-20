@@ -7,9 +7,14 @@
 </head>
 <body>
     <th:block layout:fragment="content">
-        <h4 class="mb-4"><i class="fas fa-plus-circle"></i> 新增护理项目</h4>
+        <div class="page-title">
+            <i class="fas fa-plus-circle"></i> 新增护理项目
+        </div>
 
         <div class="card">
+            <div class="card-header">
+                <i class="fas fa-info-circle"></i> 护理项目信息
+            </div>
             <div class="card-body">
                 <form id="addForm">
                     <div class="row">
@@ -106,19 +111,19 @@
                 data: JSON.stringify(data),
                 success: function(resp) {
                     if (resp && resp.success === false) {
-                        alert(resp.message || '新增失败');
+                        showToast(resp.message || '新增失败', 'error');
                         btn.prop('disabled', false).html('<i class="fas fa-save"></i> 保存');
                     } else {
-                        alert('新增成功！');
+                        showToast('新增成功！', 'success');
                         window.location.href = '/page/nursing-items';
                     }
                 },
                 error: function(xhr) {
                     try {
                         var resp = JSON.parse(xhr.responseText);
-                        alert(resp.message || '新增失败');
+                        showToast(resp.message || '新增失败', 'error');
                     } catch(e) {
-                        alert('网络错误，请重试');
+                        showToast('网络错误，请重试', 'error');
                     }
                     btn.prop('disabled', false).html('<i class="fas fa-save"></i> 保存');
                 }

@@ -7,13 +7,20 @@
 </head>
 <body>
     <th:block layout:fragment="content">
-        <h4 class="mb-4"><i class="fas fa-plus-circle"></i> 新增退住申请</h4>
+        <div class="page-title">
+            <i class="fas fa-plus-circle"></i> 新增退住申请
+            <div class="ml-auto">
+                <a th:href="@{/page/check-out-applications}" class="btn btn-outline-secondary btn-sm">
+                    <i class="fas fa-arrow-left"></i> 返回列表
+                </a>
+            </div>
+        </div>
 
         <div class="row justify-content-center">
             <div class="col-md-8">
                 <div class="card">
                     <div class="card-header">
-                        <i class="fas fa-sign-out-alt"></i> 退住申请信息
+                        <i class="fas fa-file-signature"></i> 退住申请信息
                     </div>
                     <div class="card-body">
                         <form id="addForm">
@@ -44,13 +51,13 @@
                                 <label><span class="text-danger">*</span> 申请时间</label>
                                 <input type="datetime-local" class="form-control" id="time" required>
                             </div>
-                            <div class="form-group text-right">
-                                <a th:href="@{/page/check-out-applications}" class="btn btn-secondary">
-                                    <i class="fas fa-arrow-left"></i> 返回
-                                </a>
+                            <div class="border-top pt-3">
                                 <button type="submit" class="btn btn-primary">
-                                    <i class="fas fa-save"></i> 提交
+                                    <i class="fas fa-save"></i> 提交申请
                                 </button>
+                                <a th:href="@{/page/check-out-applications}" class="btn btn-outline-secondary ml-2">
+                                    <i class="fas fa-times"></i> 取消
+                                </a>
                             </div>
                         </form>
                     </div>

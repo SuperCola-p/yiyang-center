@@ -42,6 +42,21 @@ public class MainMenuCommand {
     private final Scanner scanner = new Scanner(System.in);
     private static final DateTimeFormatter DTF = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
+    /**
+     * 在读取用户输入前确保输出缓冲被刷新，防止提示信息显示在输入之后。
+     */
+    private String readLine() {
+        System.out.flush();
+        return scanner.nextLine();
+    }
+
+    /** 带提示的读取 */
+    private String readLine(String prompt) {
+        System.out.print(prompt);
+        System.out.flush();
+        return scanner.nextLine();
+    }
+
     // ==================== 主页菜单 ====================
 
     @ShellMethod("显示主菜单")
@@ -61,7 +76,7 @@ public class MainMenuCommand {
         System.out.println("  0. 退出系统");
         System.out.println("====================================");
         System.out.print("请选择 (0-9): ");
-        String input = scanner.nextLine().trim();
+        String input = readLine().trim();
         handleMenuChoice(input);
     }
 
@@ -91,7 +106,7 @@ public class MainMenuCommand {
         System.out.println("\n--- 护理项目管理 ---");
         System.out.println("1. 查看列表  2. 新增  3. 修改  4. 删除  5. 切换状态  0. 返回主菜单");
         System.out.print("请选择: ");
-        String input = scanner.nextLine().trim();
+        String input = readLine().trim();
         switch (input) {
             case "1": listNursingItems(); break;
             case "2": addNursingItem(); break;
@@ -121,13 +136,13 @@ public class MainMenuCommand {
         System.out.println("\n--- 新增护理项目 ---");
         try {
             NursingItem item = new NursingItem();
-            System.out.print("项目编码: "); item.setCode(scanner.nextLine());
-            System.out.print("项目名称: "); item.setName(scanner.nextLine());
-            System.out.print("价格: "); item.setPrice(new BigDecimal(scanner.nextLine()));
-            System.out.print("状态(ENABLED/DISABLED): "); item.setStatus(scanner.nextLine());
-            System.out.print("执行周期(DAILY/WEEKLY/MONTHLY): "); item.setExecPeriod(scanner.nextLine());
-            System.out.print("执行次数: "); item.setExecQuantity(Integer.parseInt(scanner.nextLine()));
-            System.out.print("描述: "); item.setDescription(scanner.nextLine());
+            System.out.print("项目编码: "); item.setCode(readLine());
+            System.out.print("项目名称: "); item.setName(readLine());
+            System.out.print("价格: "); item.setPrice(new BigDecimal(readLine()));
+            System.out.print("状态(ENABLED/DISABLED): "); item.setStatus(readLine());
+            System.out.print("执行周期(DAILY/WEEKLY/MONTHLY): "); item.setExecPeriod(readLine());
+            System.out.print("执行次数: "); item.setExecQuantity(Integer.parseInt(readLine()));
+            System.out.print("描述: "); item.setDescription(readLine());
             nursingItemRepository.save(item);
             System.out.println("新增成功！ID: " + item.getId());
         } catch (Exception e) {
@@ -137,7 +152,7 @@ public class MainMenuCommand {
 
     private void updateNursingItem() {
         System.out.print("请输入要修改的项目ID: ");
-        Long id = Long.parseLong(scanner.nextLine().trim());
+        Long id = Long.parseLong(readLine().trim());
         Optional<NursingItem> opt = nursingItemRepository.findById(id);
         if (!opt.isPresent() || opt.get().getIsDeleted()) {
             System.out.println("项目不存在");
@@ -146,13 +161,13 @@ public class MainMenuCommand {
         NursingItem item = opt.get();
         try {
             System.out.print("名称(" + item.getName() + "): ");
-            String v = scanner.nextLine().trim();
+            String v = readLine().trim();
             if (!v.isEmpty()) item.setName(v);
             System.out.print("价格(" + item.getPrice() + "): ");
-            v = scanner.nextLine().trim();
+            v = readLine().trim();
             if (!v.isEmpty()) item.setPrice(new BigDecimal(v));
             System.out.print("状态(" + item.getStatus() + "): ");
-            v = scanner.nextLine().trim();
+            v = readLine().trim();
             if (!v.isEmpty()) item.setStatus(v);
             nursingItemRepository.save(item);
             System.out.println("修改成功！");
@@ -163,7 +178,7 @@ public class MainMenuCommand {
 
     private void deleteNursingItem() {
         System.out.print("请输入要删除的项目ID: ");
-        Long id = Long.parseLong(scanner.nextLine().trim());
+        Long id = Long.parseLong(readLine().trim());
         Optional<NursingItem> opt = nursingItemRepository.findById(id);
         if (opt.isPresent()) {
             NursingItem item = opt.get();
@@ -177,7 +192,7 @@ public class MainMenuCommand {
 
     private void toggleNursingItemStatus() {
         System.out.print("请输入项目ID: ");
-        Long id = Long.parseLong(scanner.nextLine().trim());
+        Long id = Long.parseLong(readLine().trim());
         Optional<NursingItem> opt = nursingItemRepository.findById(id);
         if (opt.isPresent() && !opt.get().getIsDeleted()) {
             NursingItem item = opt.get();
@@ -195,7 +210,7 @@ public class MainMenuCommand {
         System.out.println("\n--- 护理等级管理 ---");
         System.out.println("1. 查看列表  2. 新增  3. 修改  4. 删除  5. 关联项目  0. 返回");
         System.out.print("请选择: ");
-        String input = scanner.nextLine().trim();
+        String input = readLine().trim();
         switch (input) {
             case "1": listNursingLevels(); break;
             case "2": addNursingLevel(); break;
@@ -222,8 +237,8 @@ public class MainMenuCommand {
         System.out.println("\n--- 新增护理等级 ---");
         try {
             NursingLevel lv = new NursingLevel();
-            System.out.print("等级名称: "); lv.setLevelName(scanner.nextLine());
-            System.out.print("状态(ENABLED/DISABLED): "); lv.setStatus(scanner.nextLine());
+            System.out.print("等级名称: "); lv.setLevelName(readLine());
+            System.out.print("状态(ENABLED/DISABLED): "); lv.setStatus(readLine());
             nursingLevelRepository.save(lv);
             System.out.println("新增成功！ID: " + lv.getId());
         } catch (Exception e) {
@@ -233,15 +248,15 @@ public class MainMenuCommand {
 
     private void updateNursingLevel() {
         System.out.print("等级ID: ");
-        Long id = Long.parseLong(scanner.nextLine().trim());
+        Long id = Long.parseLong(readLine().trim());
         Optional<NursingLevel> opt = nursingLevelRepository.findById(id);
         if (!opt.isPresent() || opt.get().getDeleted()) return;
         NursingLevel lv = opt.get();
         System.out.print("名称(" + lv.getLevelName() + "): ");
-        String v = scanner.nextLine().trim();
+        String v = readLine().trim();
         if (!v.isEmpty()) lv.setLevelName(v);
         System.out.print("状态(" + lv.getStatus() + "): ");
-        v = scanner.nextLine().trim();
+        v = readLine().trim();
         if (!v.isEmpty()) lv.setStatus(v);
         nursingLevelRepository.save(lv);
         System.out.println("修改成功");
@@ -249,7 +264,7 @@ public class MainMenuCommand {
 
     private void deleteNursingLevel() {
         System.out.print("等级ID: ");
-        Long id = Long.parseLong(scanner.nextLine().trim());
+        Long id = Long.parseLong(readLine().trim());
         Optional<NursingLevel> opt = nursingLevelRepository.findById(id);
         if (opt.isPresent()) {
             NursingLevel lv = opt.get();
@@ -261,7 +276,7 @@ public class MainMenuCommand {
 
     private void linkItemsToLevel() {
         System.out.print("等级ID: ");
-        Long levelId = Long.parseLong(scanner.nextLine().trim());
+        Long levelId = Long.parseLong(readLine().trim());
         // 显示可选项目
         List<NursingItem> items = nursingItemRepository.findByIsDeletedFalse();
         System.out.println("可选护理项目:");
@@ -269,7 +284,7 @@ public class MainMenuCommand {
             System.out.println("  ID:" + item.getId() + " " + item.getName());
         }
         System.out.print("请输入要关联的项目ID(逗号分隔): ");
-        String ids = scanner.nextLine().trim();
+        String ids = readLine().trim();
         // 先删除旧关联
         List<NursingLevelItem> old = nursingLevelItemRepository.findByLevelId(levelId);
         nursingLevelItemRepository.deleteAll(old);
@@ -288,7 +303,7 @@ public class MainMenuCommand {
         System.out.println("\n--- 床位管理 ---");
         System.out.println("1. 查看列表  2. 新增  3. 修改状态  4. 删除  0. 返回");
         System.out.print("请选择: ");
-        String input = scanner.nextLine().trim();
+        String input = readLine().trim();
         switch (input) {
             case "1": listBeds(); break;
             case "2": addBed(); break;
@@ -314,11 +329,11 @@ public class MainMenuCommand {
         System.out.println("\n--- 新增床位 ---");
         try {
             Bed bed = new Bed();
-            System.out.print("楼栋: "); bed.setBuilding(scanner.nextLine());
-            System.out.print("房间号: "); bed.setRoomNo(Integer.parseInt(scanner.nextLine()));
-            System.out.print("床位号: "); bed.setBedNo(scanner.nextLine());
+            System.out.print("楼栋: "); bed.setBuilding(readLine());
+            System.out.print("房间号: "); bed.setRoomNo(Integer.parseInt(readLine()));
+            System.out.print("床位号: "); bed.setBedNo(readLine());
             System.out.print("状态(1=空闲 2=已入住 3=维修): ");
-            bed.setBedStatus(Integer.parseInt(scanner.nextLine()));
+            bed.setBedStatus(Integer.parseInt(readLine()));
             bedRepository.save(bed);
             System.out.println("新增成功");
         } catch (Exception e) {
@@ -328,18 +343,18 @@ public class MainMenuCommand {
 
     private void updateBedStatus() {
         System.out.print("床位ID: ");
-        Long id = Long.parseLong(scanner.nextLine().trim());
+        Long id = Long.parseLong(readLine().trim());
         Optional<Bed> opt = bedRepository.findById(id);
         if (!opt.isPresent()) return;
         System.out.print("新状态(1=空闲 2=已入住 3=维修): ");
-        opt.get().setBedStatus(Integer.parseInt(scanner.nextLine().trim()));
+        opt.get().setBedStatus(Integer.parseInt(readLine().trim()));
         bedRepository.save(opt.get());
         System.out.println("修改成功");
     }
 
     private void deleteBed() {
         System.out.print("床位ID: ");
-        Long id = Long.parseLong(scanner.nextLine().trim());
+        Long id = Long.parseLong(readLine().trim());
         bedRepository.deleteById(id);
         System.out.println("删除成功");
     }
@@ -350,7 +365,7 @@ public class MainMenuCommand {
         System.out.println("\n--- 老人管理 ---");
         System.out.println("1. 查看列表  2. 新增  3. 修改  4. 删除  5. 分配护理等级  0. 返回");
         System.out.print("请选择: ");
-        String input = scanner.nextLine().trim();
+        String input = readLine().trim();
         switch (input) {
             case "1": listClients(); break;
             case "2": addClient(); break;
@@ -377,20 +392,20 @@ public class MainMenuCommand {
         System.out.println("\n--- 新增老人 ---");
         try {
             Client c = new Client();
-            System.out.print("姓名: "); c.setName(scanner.nextLine());
-            System.out.print("年龄: "); c.setAge(Integer.parseInt(scanner.nextLine()));
-            System.out.print("性别(男/女): "); c.setGender(scanner.nextLine());
-            System.out.print("血型: "); c.setBloodType(scanner.nextLine());
-            System.out.print("电话: "); c.setPhone(scanner.nextLine());
-            System.out.print("家属联系方式: "); c.setFamilyContact(scanner.nextLine());
-            System.out.print("身份证号: "); c.setIdCard(scanner.nextLine());
-            System.out.print("楼栋: "); c.setBuildingNo(scanner.nextLine());
-            System.out.print("房间: "); c.setRoomNo(scanner.nextLine());
-            System.out.print("床位: "); c.setBedNo(scanner.nextLine());
-            System.out.print("出生日期(yyyy-MM-dd): "); c.setBirthday(LocalDate.parse(scanner.nextLine()));
-            System.out.print("入住日期(yyyy-MM-dd): "); c.setCheckInDate(LocalDate.parse(scanner.nextLine()));
-            System.out.print("护理等级: "); c.setNursingLevel(scanner.nextLine());
-            System.out.print("类型(自理/半自理/全护理): "); c.setType(scanner.nextLine());
+            System.out.print("姓名: "); c.setName(readLine());
+            System.out.print("年龄: "); c.setAge(Integer.parseInt(readLine()));
+            System.out.print("性别(男/女): "); c.setGender(readLine());
+            System.out.print("血型: "); c.setBloodType(readLine());
+            System.out.print("电话: "); c.setPhone(readLine());
+            System.out.print("家属联系方式: "); c.setFamilyContact(readLine());
+            System.out.print("身份证号: "); c.setIdCard(readLine());
+            System.out.print("楼栋: "); c.setBuildingNo(readLine());
+            System.out.print("房间: "); c.setRoomNo(readLine());
+            System.out.print("床位: "); c.setBedNo(readLine());
+            System.out.print("出生日期(yyyy-MM-dd): "); c.setBirthday(LocalDate.parse(readLine()));
+            System.out.print("入住日期(yyyy-MM-dd): "); c.setCheckInDate(LocalDate.parse(readLine()));
+            System.out.print("护理等级: "); c.setNursingLevel(readLine());
+            System.out.print("类型(自理/半自理/全护理): "); c.setType(readLine());
             clientRepository.save(c);
             System.out.println("新增成功！ID: " + c.getId());
         } catch (Exception e) {
@@ -400,19 +415,19 @@ public class MainMenuCommand {
 
     private void updateClient() {
         System.out.print("老人ID: ");
-        Integer id = Integer.parseInt(scanner.nextLine().trim());
+        Integer id = Integer.parseInt(readLine().trim());
         Optional<Client> opt = clientRepository.findById(id);
         if (!opt.isPresent() || opt.get().getDeleted()) return;
         Client c = opt.get();
         try {
             System.out.print("姓名(" + c.getName() + "): ");
-            String v = scanner.nextLine().trim();
+            String v = readLine().trim();
             if (!v.isEmpty()) c.setName(v);
             System.out.print("电话(" + c.getPhone() + "): ");
-            v = scanner.nextLine().trim();
+            v = readLine().trim();
             if (!v.isEmpty()) c.setPhone(v);
             System.out.print("护理等级(" + c.getNursingLevel() + "): ");
-            v = scanner.nextLine().trim();
+            v = readLine().trim();
             if (!v.isEmpty()) c.setNursingLevel(v);
             clientRepository.save(c);
             System.out.println("修改成功");
@@ -423,7 +438,7 @@ public class MainMenuCommand {
 
     private void deleteClient() {
         System.out.print("老人ID: ");
-        Integer id = Integer.parseInt(scanner.nextLine().trim());
+        Integer id = Integer.parseInt(readLine().trim());
         Optional<Client> opt = clientRepository.findById(id);
         if (opt.isPresent()) {
             Client c = opt.get();
@@ -434,8 +449,8 @@ public class MainMenuCommand {
     }
 
     private void assignNursingLevel() {
-        System.out.print("老人ID: "); Integer cid = Integer.parseInt(scanner.nextLine().trim());
-        System.out.print("护理等级名称: "); String level = scanner.nextLine().trim();
+        System.out.print("老人ID: "); Integer cid = Integer.parseInt(readLine().trim());
+        System.out.print("护理等级名称: "); String level = readLine().trim();
         Optional<Client> opt = clientRepository.findById(cid);
         if (opt.isPresent()) {
             Client c = opt.get();
@@ -451,7 +466,7 @@ public class MainMenuCommand {
         System.out.println("\n--- 护理服务设置 ---");
         System.out.println("1. 查看服务  2. 购买服务  3. 消费扣次  4. 续费  5. 检查到期  0. 返回");
         System.out.print("请选择: ");
-        String input = scanner.nextLine().trim();
+        String input = readLine().trim();
         switch (input) {
             case "1": listNursingSettings(); break;
             case "2": purchaseService(); break;
@@ -466,7 +481,7 @@ public class MainMenuCommand {
 
     private void listNursingSettings() {
         System.out.print("老人ID: ");
-        Long cid = Long.parseLong(scanner.nextLine().trim());
+        Long cid = Long.parseLong(readLine().trim());
         List<ClientNursingSetting> list = clientNursingSettingRepository
                 .findByClientIdAndIsDeletedFalse(cid);
         System.out.println("\n===== 护理服务列表 =====");
@@ -480,10 +495,10 @@ public class MainMenuCommand {
 
     private void purchaseService() {
         try {
-            System.out.print("老人ID: "); Long cid = Long.parseLong(scanner.nextLine());
-            System.out.print("护理项目ID: "); Long nid = Long.parseLong(scanner.nextLine());
-            System.out.print("总次数: "); int total = Integer.parseInt(scanner.nextLine());
-            System.out.print("到期日期(yyyy-MM-dd): "); LocalDate due = LocalDate.parse(scanner.nextLine());
+            System.out.print("老人ID: "); Long cid = Long.parseLong(readLine());
+            System.out.print("护理项目ID: "); Long nid = Long.parseLong(readLine());
+            System.out.print("总次数: "); int total = Integer.parseInt(readLine());
+            System.out.print("到期日期(yyyy-MM-dd): "); LocalDate due = LocalDate.parse(readLine());
 
             ClientNursingSetting s = new ClientNursingSetting();
             s.setClientId(cid);
@@ -501,8 +516,8 @@ public class MainMenuCommand {
     }
 
     private void consumeService() {
-        System.out.print("服务记录ID: "); Long id = Long.parseLong(scanner.nextLine());
-        System.out.print("消费数量: "); int qty = Integer.parseInt(scanner.nextLine());
+        System.out.print("服务记录ID: "); Long id = Long.parseLong(readLine());
+        System.out.print("消费数量: "); int qty = Integer.parseInt(readLine());
         Optional<ClientNursingSetting> opt = clientNursingSettingRepository.findById(id);
         if (opt.isPresent()) {
             ClientNursingSetting s = opt.get();
@@ -517,9 +532,9 @@ public class MainMenuCommand {
     }
 
     private void renewService() {
-        System.out.print("服务记录ID: "); Long id = Long.parseLong(scanner.nextLine());
-        System.out.print("追加次数: "); int add = Integer.parseInt(scanner.nextLine());
-        System.out.print("新到期日期(yyyy-MM-dd): "); LocalDate due = LocalDate.parse(scanner.nextLine());
+        System.out.print("服务记录ID: "); Long id = Long.parseLong(readLine());
+        System.out.print("追加次数: "); int add = Integer.parseInt(readLine());
+        System.out.print("新到期日期(yyyy-MM-dd): "); LocalDate due = LocalDate.parse(readLine());
         Optional<ClientNursingSetting> opt = clientNursingSettingRepository.findById(id);
         if (opt.isPresent()) {
             ClientNursingSetting s = opt.get();
@@ -553,7 +568,7 @@ public class MainMenuCommand {
         System.out.println("\n--- 护理记录 ---");
         System.out.println("1. 查看记录  2. 新增记录  0. 返回");
         System.out.print("请选择: ");
-        String input = scanner.nextLine().trim();
+        String input = readLine().trim();
         switch (input) {
             case "1": listNursingRecords(); break;
             case "2": addNursingRecord(); break;
@@ -578,13 +593,13 @@ public class MainMenuCommand {
 
     private void addNursingRecord() {
         try {
-            System.out.print("老人ID: "); Long cid = Long.parseLong(scanner.nextLine());
-            System.out.print("护理项目ID: "); Long nid = Long.parseLong(scanner.nextLine());
-            System.out.print("护理员ID: "); Long hid = Long.parseLong(scanner.nextLine());
+            System.out.print("老人ID: "); Long cid = Long.parseLong(readLine());
+            System.out.print("护理项目ID: "); Long nid = Long.parseLong(readLine());
+            System.out.print("护理员ID: "); Long hid = Long.parseLong(readLine());
             System.out.print("护理时间(yyyy-MM-dd HH:mm): ");
-            LocalDateTime time = LocalDateTime.parse(scanner.nextLine(), DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"));
-            System.out.print("执行次数: "); int qty = Integer.parseInt(scanner.nextLine());
-            System.out.print("备注: "); String remark = scanner.nextLine();
+            LocalDateTime time = LocalDateTime.parse(readLine(), DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"));
+            System.out.print("执行次数: "); int qty = Integer.parseInt(readLine());
+            System.out.print("备注: "); String remark = readLine();
 
             NursingRecord r = new NursingRecord();
             r.setClientId(cid);
@@ -606,7 +621,7 @@ public class MainMenuCommand {
         System.out.println("\n--- 退住申请 ---");
         System.out.println("1. 查看列表  2. 新增  3. 审核  0. 返回");
         System.out.print("请选择: ");
-        String input = scanner.nextLine().trim();
+        String input = readLine().trim();
         switch (input) {
             case "1": listCheckOuts(); break;
             case "2": addCheckOut(); break;
@@ -631,10 +646,10 @@ public class MainMenuCommand {
     private void addCheckOut() {
         try {
             CheckOutApplication app = new CheckOutApplication();
-            System.out.print("老人ID: "); app.setClientId(Integer.parseInt(scanner.nextLine()));
-            System.out.print("老人姓名: "); app.setClientName(scanner.nextLine());
-            System.out.print("退住类型(主动退住/违规劝退/转院): "); app.setType(scanner.nextLine());
-            System.out.print("原因: "); app.setReason(scanner.nextLine());
+            System.out.print("老人ID: "); app.setClientId(Integer.parseInt(readLine()));
+            System.out.print("老人姓名: "); app.setClientName(readLine());
+            System.out.print("退住类型(主动退住/违规劝退/转院): "); app.setType(readLine());
+            System.out.print("原因: "); app.setReason(readLine());
             app.setTime(LocalDateTime.now());
             app.setId("CO-" + System.currentTimeMillis());
             app.setStatus("已提交");
@@ -646,12 +661,12 @@ public class MainMenuCommand {
     }
 
     private void auditCheckOut() {
-        System.out.print("申请编号: "); String id = scanner.nextLine().trim();
+        System.out.print("申请编号: "); String id = readLine().trim();
         Optional<CheckOutApplication> opt = checkOutApplicationRepository.findById(id);
         if (!opt.isPresent()) return;
-        System.out.print("审核人: "); String auditor = scanner.nextLine().trim();
+        System.out.print("审核人: "); String auditor = readLine().trim();
         System.out.print("是否同意(y/n): ");
-        boolean approve = "y".equalsIgnoreCase(scanner.nextLine().trim());
+        boolean approve = "y".equalsIgnoreCase(readLine().trim());
         CheckOutApplication app = opt.get();
         app.setStatus(approve ? "已通过" : "已拒绝");
         app.setAuditor(auditor);
@@ -666,7 +681,7 @@ public class MainMenuCommand {
         System.out.println("\n--- 请假管理 ---");
         System.out.println("1. 查看列表  2. 新增  3. 审核  4. 归院登记  0. 返回");
         System.out.print("请选择: ");
-        String input = scanner.nextLine().trim();
+        String input = readLine().trim();
         switch (input) {
             case "1": listLeaves(); break;
             case "2": addLeave(); break;
@@ -692,13 +707,13 @@ public class MainMenuCommand {
     private void addLeave() {
         try {
             LeaveApplication app = new LeaveApplication();
-            System.out.print("老人ID: "); app.setClientId(Integer.parseInt(scanner.nextLine()));
-            System.out.print("老人姓名: "); app.setClientName(scanner.nextLine());
-            System.out.print("请假原因: "); app.setReason(scanner.nextLine());
+            System.out.print("老人ID: "); app.setClientId(Integer.parseInt(readLine()));
+            System.out.print("老人姓名: "); app.setClientName(readLine());
+            System.out.print("请假原因: "); app.setReason(readLine());
             System.out.print("请假时间(yyyy-MM-dd HH:mm): ");
-            app.setLeaveTime(LocalDateTime.parse(scanner.nextLine(), DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")));
+            app.setLeaveTime(LocalDateTime.parse(readLine(), DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")));
             System.out.print("预计结束(yyyy-MM-dd HH:mm): ");
-            app.setPredictedEnd(LocalDateTime.parse(scanner.nextLine(), DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")));
+            app.setPredictedEnd(LocalDateTime.parse(readLine(), DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")));
             app.setId("LV-" + System.currentTimeMillis());
             app.setStatus("已提交");
             leaveApplicationRepository.save(app);
@@ -709,12 +724,12 @@ public class MainMenuCommand {
     }
 
     private void auditLeave() {
-        System.out.print("申请编号: "); String id = scanner.nextLine().trim();
+        System.out.print("申请编号: "); String id = readLine().trim();
         Optional<LeaveApplication> opt = leaveApplicationRepository.findById(id);
         if (!opt.isPresent()) return;
-        System.out.print("审核人: "); String auditor = scanner.nextLine().trim();
+        System.out.print("审核人: "); String auditor = readLine().trim();
         System.out.print("是否同意(y/n): ");
-        boolean approve = "y".equalsIgnoreCase(scanner.nextLine().trim());
+        boolean approve = "y".equalsIgnoreCase(readLine().trim());
         LeaveApplication app = opt.get();
         app.setStatus(approve ? "已通过" : "已拒绝");
         app.setAuditor(auditor);
@@ -724,7 +739,7 @@ public class MainMenuCommand {
     }
 
     private void returnLeave() {
-        System.out.print("申请编号: "); String id = scanner.nextLine().trim();
+        System.out.print("申请编号: "); String id = readLine().trim();
         Optional<LeaveApplication> opt = leaveApplicationRepository.findById(id);
         if (opt.isPresent()) {
             LeaveApplication app = opt.get();
@@ -740,7 +755,7 @@ public class MainMenuCommand {
         System.out.println("\n--- 操作员管理 ---");
         System.out.println("1. 查看列表  2. 新增  3. 修改  4. 删除  0. 返回");
         System.out.print("请选择: ");
-        String input = scanner.nextLine().trim();
+        String input = readLine().trim();
         switch (input) {
             case "1": listOperators(); break;
             case "2": addOperator(); break;
@@ -765,10 +780,10 @@ public class MainMenuCommand {
     private void addOperator() {
         try {
             Operator op = new Operator();
-            System.out.print("登录账号: "); op.setLoginCode(scanner.nextLine());
-            System.out.print("密码: "); op.setPassword(scanner.nextLine());
-            System.out.print("真实姓名: "); op.setRealName(scanner.nextLine());
-            System.out.print("类型(ADMIN/STAFF): "); op.setOperatorType(scanner.nextLine());
+            System.out.print("登录账号: "); op.setLoginCode(readLine());
+            System.out.print("密码: "); op.setPassword(readLine());
+            System.out.print("真实姓名: "); op.setRealName(readLine());
+            System.out.print("类型(ADMIN/STAFF): "); op.setOperatorType(readLine());
             operatorRepository.save(op);
             System.out.println("新增成功");
         } catch (Exception e) {
@@ -777,18 +792,18 @@ public class MainMenuCommand {
     }
 
     private void updateOperator() {
-        System.out.print("登录账号: "); String code = scanner.nextLine().trim();
+        System.out.print("登录账号: "); String code = readLine().trim();
         Optional<Operator> opt = operatorRepository.findById(code);
         if (!opt.isPresent() || opt.get().getDeleted()) return;
         Operator op = opt.get();
         System.out.print("姓名(" + op.getRealName() + "): ");
-        String v = scanner.nextLine().trim();
+        String v = readLine().trim();
         if (!v.isEmpty()) op.setRealName(v);
         System.out.print("密码(不修改直接回车): ");
-        v = scanner.nextLine().trim();
+        v = readLine().trim();
         if (!v.isEmpty()) op.setPassword(v);
         System.out.print("类型(" + op.getOperatorType() + "): ");
-        v = scanner.nextLine().trim();
+        v = readLine().trim();
         if (!v.isEmpty()) op.setOperatorType(v);
         operatorRepository.save(op);
         System.out.println("修改成功");
@@ -796,7 +811,7 @@ public class MainMenuCommand {
 
     private void deleteOperator() {
         System.out.print("登录账号: ");
-        String code = scanner.nextLine().trim();
+        String code = readLine().trim();
         Optional<Operator> opt = operatorRepository.findById(code);
         if (opt.isPresent()) {
             Operator op = opt.get();

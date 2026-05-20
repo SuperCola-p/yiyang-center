@@ -7,7 +7,7 @@
 </head>
 <body>
     <th:block layout:fragment="content">
-        <h4 class="mb-4"><i class="fas fa-notes-medical"></i> 老人护理服务设置</h4>
+        <div class="page-title"><i class="fas fa-notes-medical"></i> 老人护理服务设置</div>
 
         <!-- 老人选择 -->
         <div class="card">
@@ -63,7 +63,6 @@
                 </div>
             </div>
         </div>
-    </th:block>
 
     <!-- 购买护理服务模态框 -->
     <div class="modal fade" id="purchaseModal" tabindex="-1" role="dialog">
@@ -152,6 +151,7 @@
             </div>
         </div>
     </div>
+    </th:block>
 
     <th:block layout:fragment="script-extra">
     <script>
@@ -205,7 +205,7 @@
     function loadNursingServices() {
         var clientId = $('#clientSelect').val();
         if (!clientId) {
-            alert('请先选择老人');
+            showToast('请先选择老人', 'warning');
             return;
         }
         currentClientId = clientId;
@@ -247,7 +247,7 @@
     // 显示购买弹窗
     function showPurchaseModal() {
         if (!currentClientId && !$('#clientSelect').val()) {
-            alert('请先选择老人');
+            showToast('请先选择老人', 'warning');
             return;
         }
         if (!currentClientId) currentClientId = $('#clientSelect').val();
@@ -261,16 +261,16 @@
     // 提交购买
     function submitPurchase() {
         var clientId = currentClientId || $('#clientSelect').val();
-        if (!clientId) { alert('请先选择老人'); return; }
+        if (!clientId) { showToast('请先选择老人', 'warning'); return; }
         var nursingItemId = $('#purchaseItem').val();
         var nursingLevelId = $('#purchaseLevel').val();
         var totalQuantity = parseInt($('#purchaseTotalQuantity').val());
         var serviceDueDate = $('#purchaseDueDate').val();
 
-        if (!nursingItemId) { alert('请选择护理项目'); return; }
-        if (!nursingLevelId) { alert('请选择护理等级'); return; }
-        if (!totalQuantity || totalQuantity < 1) { alert('请输入有效的总次数'); return; }
-        if (!serviceDueDate) { alert('请选择服务到期日期'); return; }
+        if (!nursingItemId) { showToast('请选择护理项目', 'warning'); return; }
+        if (!nursingLevelId) { showToast('请选择护理等级', 'warning'); return; }
+        if (!totalQuantity || totalQuantity < 1) { showToast('请输入有效的总次数', 'warning'); return; }
+        if (!serviceDueDate) { showToast('请选择服务到期日期', 'warning'); return; }
 
         var data = {
             clientId: clientId,
@@ -287,15 +287,15 @@
             data: JSON.stringify(data),
             success: function(resp) {
                 if (resp.code === 200 || resp.success) {
-                    alert('购买成功');
+                    showToast('购买成功', 'success');
                     $('#purchaseModal').modal('hide');
                     loadNursingServices();
                 } else {
-                    alert(resp.message || '购买失败');
+                    showToast(resp.message || '购买失败', 'error');
                 }
             },
             error: function() {
-                alert('请求失败，请重试');
+                showToast('请求失败，请重试', 'error');
             }
         });
     }
@@ -312,7 +312,7 @@
         var settingId = $('#consumeSettingId').val();
         var quantity = parseInt($('#consumeQuantity').val());
 
-        if (!quantity || quantity < 1) { alert('请输入有效的消费数量'); return; }
+        if (!quantity || quantity < 1) { showToast('请输入有效的消费数量', 'warning'); return; }
 
         $.ajax({
             url: '/api/client-nursing-settings/consume',
@@ -321,15 +321,15 @@
             data: JSON.stringify({ id: settingId, quantity: quantity }),
             success: function(resp) {
                 if (resp.code === 200 || resp.success) {
-                    alert('扣次成功');
+                    showToast('扣次成功', 'success');
                     $('#consumeModal').modal('hide');
                     loadNursingServices();
                 } else {
-                    alert(resp.message || '扣次失败');
+                    showToast(resp.message || '扣次失败', 'error');
                 }
             },
             error: function() {
-                alert('请求失败，请重试');
+                showToast('请求失败，请重试', 'error');
             }
         });
     }
@@ -348,7 +348,7 @@
         var quantity = parseInt($('#renewQuantity').val());
         var dueDate = $('#renewDueDate').val();
 
-        if (!quantity || quantity < 1) { alert('请输入有效的新增次数'); return; }
+        if (!quantity || quantity < 1) { showToast('请输入有效的新增次数', 'warning'); return; }
 
         var data = { id: settingId, quantity: quantity };
         if (dueDate) data.serviceDueDate = dueDate;
@@ -360,38 +360,40 @@
             data: JSON.stringify(data),
             success: function(resp) {
                 if (resp.code === 200 || resp.success) {
-                    alert('续费成功');
+                    showToast('续费成功', 'success');
                     $('#renewModal').modal('hide');
                     loadNursingServices();
                 } else {
-                    alert(resp.message || '续费失败');
+                    showToast(resp.message || '续费失败', 'error');
                 }
             },
             error: function() {
-                alert('请求失败，请重试');
+                showToast('请求失败，请重试', 'error');
             }
         });
     }
 
     // 检查到期
     function checkExpiry() {
-        if (!confirm('确定要检查所有护理服务的到期状态吗？')) return;
-        $.ajax({
-            url: '/api/client-nursing-settings/check-expiry',
-            type: 'POST',
-            success: function(resp) {
-                if (resp.code === 200 || resp.success) {
-                    alert('到期检查完成');
-                    if (currentClientId || $('#clientSelect').val()) {
-                        loadNursingServices();
+        showConfirm('确定要检查所有护理服务的到期状态吗？', function(ok) {
+            if (!ok) return;
+            $.ajax({
+                url: '/api/client-nursing-settings/check-expiry',
+                type: 'POST',
+                success: function(resp) {
+                    if (resp.code === 200 || resp.success) {
+                        showToast('到期检查完成', 'success');
+                        if (currentClientId || $('#clientSelect').val()) {
+                            loadNursingServices();
+                        }
+                    } else {
+                        showToast(resp.message || '检查失败', 'error');
                     }
-                } else {
-                    alert(resp.message || '检查失败');
+                },
+                error: function() {
+                    showToast('请求失败，请重试', 'error');
                 }
-            },
-            error: function() {
-                alert('请求失败，请重试');
-            }
+            });
         });
     }
     </script>

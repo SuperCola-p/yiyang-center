@@ -7,7 +7,9 @@
 </head>
 <body>
     <th:block layout:fragment="content">
-        <h4 class="mb-4"><i class="fas fa-layer-group"></i> 护理等级管理</h4>
+        <div class="page-title">
+            <i class="fas fa-layer-group"></i> 护理等级管理
+        </div>
 
         <div class="search-bar">
             <div class="row">
@@ -20,7 +22,7 @@
         </div>
 
         <div class="card">
-            <div class="card-header">护理等级列表</div>
+            <div class="card-header"><i class="fas fa-list"></i> 护理等级列表</div>
             <div class="card-body p-0">
                 <table class="table table-hover mb-0">
                     <thead>
@@ -33,8 +35,33 @@
                         </tr>
                     </thead>
                     <tbody id="levelTableBody">
+                        <tr id="loadingRow">
+                            <td colspan="5" class="loading-state">
+                                <i class="fas fa-spinner fa-spin"></i> 加载中...
+                            </td>
+                        </tr>
                     </tbody>
                 </table>
+            </div>
+        </div>
+
+        <!-- 删除确认弹窗 -->
+        <div class="modal fade" id="deleteModal" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title"><i class="fas fa-exclamation-triangle text-danger"></i> 确认删除</h5>
+                        <button type="button" class="close" data-dismiss="modal">&times;</button>
+                    </div>
+                    <div class="modal-body">
+                        <p>确定要删除护理等级 <strong id="deleteLevelName"></strong> 吗？</p>
+                        <p class="text-danger"><small>此操作不可恢复。</small></p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">取消</button>
+                        <button type="button" class="btn btn-danger" id="confirmDeleteBtn">确认删除</button>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -43,7 +70,7 @@
             <div class="modal-dialog">
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h5 class="modal-title">设置关联项目</h5>
+                        <h5 class="modal-title"><i class="fas fa-link"></i> 设置关联项目</h5>
                         <button type="button" class="close" data-dismiss="modal">&times;</button>
                     </div>
                     <div class="modal-body">
@@ -62,11 +89,24 @@
     <th:block layout:fragment="script-extra">
     <script>
     function loadData() {
+        // 显示加载状态
+        $('#levelTableBody').html(
+            '<tr><td colspan="5" class="loading-state">' +
+            '<i class="fas fa-spinner fa-spin"></i> 加载中...</td></tr>'
+        );
         $.get('/api/nursing-levels', function(resp) {
             var data = resp.data || resp || [];
+            // 过滤已删除的数据
+            data = data.filter(function(lv) { return !lv.deleted; });
+            if (data.length === 0) {
+                $('#levelTableBody').html(
+                    '<tr><td colspan="5" class="empty-state">' +
+                    '<i class="fas fa-inbox"></i><p>暂无护理等级数据</p></td></tr>'
+                );
+                return;
+            }
             var html = '';
             data.forEach(function(lv) {
-                if (lv.deleted) return;
                 var statusBadge = lv.status === 'ENABLED'
                     ? '<span class="badge badge-success">启用</span>'
                     : '<span class="badge badge-secondary">禁用</span>';
@@ -81,13 +121,13 @@
                             (lv.status === 'ENABLED' ? '禁用' : '启用') +
                         '</button>' +
                         '<button class="btn btn-sm btn-secondary btn-action" onclick="openLinkItems(' + lv.id + ')">关联项目</button>' +
-                        '<button class="btn btn-sm btn-danger btn-action" onclick="deleteLevel(' + lv.id + ')">删除</button>' +
+                        '<button class="btn btn-sm btn-danger btn-action" onclick="deleteLevel(' + lv.id + ', \'' + lv.levelName.replace(/'/g, "\\'") + '\')">删除</button>' +
                     '</td></tr>';
             });
             $('#levelTableBody').html(html);
             // 加载每个等级的关联数
             data.forEach(function(lv) {
-                if (!lv.deleted) loadItemCount(lv.id);
+                loadItemCount(lv.id);
             });
         });
     }
@@ -110,15 +150,31 @@
         });
     }
 
-    function deleteLevel(id) {
-        if (!confirm('确定删除该护理等级吗？')) return;
-        $.ajax({
-            url: '/api/nursing-levels/' + id,
-            type: 'DELETE',
-            success: function() { showToast('删除成功', 'success'); loadData(); },
-            error: function() { showToast('删除失败', 'error'); }
-        });
+    var deleteLevelId = null;
+
+    function deleteLevel(id, levelName) {
+        deleteLevelId = id;
+        $('#deleteLevelName').text(levelName || '该护理等级');
+        $('#deleteModal').modal('show');
     }
+
+    $('#confirmDeleteBtn').click(function() {
+        if (deleteLevelId == null) return;
+        $.ajax({
+            url: '/api/nursing-levels/' + deleteLevelId,
+            type: 'DELETE',
+            success: function() {
+                $('#deleteModal').modal('hide');
+                deleteLevelId = null;
+                showToast('删除成功', 'success');
+                loadData();
+            },
+            error: function() {
+                $('#deleteModal').modal('hide');
+                showToast('删除失败', 'error');
+            }
+        });
+    });
 
     function openLinkItems(levelId) {
         $('#linkLevelId').val(levelId);

@@ -11,7 +11,7 @@
 </head>
 <body>
     <th:block layout:fragment="content">
-        <h4 class="mb-4"><i class="fas fa-users"></i> 老人列表</h4>
+        <div class="page-title"><i class="fas fa-users"></i> 老人管理</div>
 
         <!-- 搜索栏 -->
         <div class="search-bar">
@@ -23,6 +23,19 @@
                 <div class="form-group mr-3">
                     <label class="mr-2"><i class="fas fa-building"></i> 楼栋号：</label>
                     <input type="text" class="form-control form-control-sm" id="searchBuildingNo" placeholder="输入楼栋号">
+                </div>
+                <div class="form-group mr-3">
+                    <label class="mr-2"><i class="fas fa-door-open"></i> 房间号：</label>
+                    <input type="text" class="form-control form-control-sm" id="searchRoomNo" placeholder="输入房间号" style="width:100px;">
+                </div>
+                <div class="form-group mr-3">
+                    <label class="mr-2"><i class="fas fa-tag"></i> 状态：</label>
+                    <select class="form-control form-control-sm" id="searchStatus" style="width:100px;">
+                        <option value="">全部</option>
+                        <option value="ACTIVE">正常入住</option>
+                        <option value="LEAVE">请假</option>
+                        <option value="CHECKED_OUT">已退住</option>
+                    </select>
                 </div>
                 <button type="submit" class="btn btn-primary btn-sm mr-2">
                     <i class="fas fa-search"></i> 搜索
@@ -62,12 +75,16 @@
                             </tr>
                         </thead>
                         <tbody>
+                            <tr id="clientLoadingRow" class="loading-state" style="display:none;">
+                                <td colspan="9">
+                                    <i class="fas fa-spinner fa-spin"></i> 加载中...
+                                </td>
+                            </tr>
                         </tbody>
                     </table>
                 </div>
             </div>
         </div>
-    </th:block>
 
     <!-- 分配护理等级模态框 -->
     <div class="modal fade" id="nursingLevelModal" tabindex="-1" role="dialog">
@@ -127,6 +144,28 @@
         </div>
     </div>
 
+    <!-- 删除确认弹窗 -->
+    <div class="modal fade" id="deleteConfirmModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-sm" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="fas fa-exclamation-triangle text-danger"></i> 确认删除</h5>
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <p>确定要删除该老人信息吗？此操作不可撤销。</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary btn-sm" data-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-danger btn-sm" onclick="confirmDelete()">
+                        <i class="fas fa-trash"></i> 确认删除
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    </th:block>
+
     <th:block layout:fragment="script-extra">
     <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.4/js/dataTables.bootstrap4.min.js"></script>
@@ -148,7 +187,7 @@
                     return resp.data || resp || [];
                 }
             },
-            columns: [
+                    columns: [
                 { data: 'name' },
                 { data: 'age' },
                 { data: 'gender' },
@@ -166,10 +205,10 @@
                     data: null,
                     orderable: false,
                     render: function(row) {
-                        var html = '<a href="/page/clients/edit?id=' + row.id + '" class="btn btn-info btn-sm btn-action" title="编辑"><i class="fas fa-edit"></i> 编辑</a>';
-                        html += '<button class="btn btn-warning btn-sm btn-action" onclick="showNursingLevelModal(' + row.id + ')" title="分配护理等级"><i class="fas fa-layer-group"></i> 护理等级</button>';
-                        html += '<button class="btn btn-primary btn-sm btn-action" onclick="showNursingService(' + row.id + ')" title="查看护理服务"><i class="fas fa-notes-medical"></i> 护理服务</button>';
-                        html += '<button class="btn btn-danger btn-sm btn-action" onclick="deleteClient(' + row.id + ')" title="删除"><i class="fas fa-trash"></i> 删除</button>';
+                        var html = '<a href="/page/clients/edit?id=' + row.id + '" class="btn btn-outline-info btn-sm btn-action" title="编辑"><i class="fas fa-edit"></i></a>';
+                        html += '<button class="btn btn-outline-warning btn-sm btn-action" onclick="showNursingLevelModal(' + row.id + ')" title="分配护理等级"><i class="fas fa-layer-group"></i></button>';
+                        html += '<button class="btn btn-outline-primary btn-sm btn-action" onclick="showNursingService(' + row.id + ')" title="查看护理服务"><i class="fas fa-notes-medical"></i></button>';
+                        html += '<button class="btn btn-outline-danger btn-sm btn-action" onclick="openDeleteModal(' + row.id + ')" title="删除"><i class="fas fa-trash"></i></button>';
                         return html;
                     }
                 }
@@ -191,10 +230,14 @@
     function refreshTable() {
         var name = $('#searchName').val();
         var buildingNo = $('#searchBuildingNo').val();
+        var roomNo = $('#searchRoomNo').val();
+        var status = $('#searchStatus').val();
         var url = '/api/clients';
         var params = [];
         if (name) params.push('name=' + encodeURIComponent(name));
         if (buildingNo) params.push('buildingNo=' + encodeURIComponent(buildingNo));
+        if (roomNo) params.push('roomNo=' + encodeURIComponent(roomNo));
+        if (status) params.push('status=' + encodeURIComponent(status));
         if (params.length > 0) url += '?' + params.join('&');
 
         clientTable.ajax.url(url).load();
@@ -204,6 +247,8 @@
     function resetSearch() {
         $('#searchName').val('');
         $('#searchBuildingNo').val('');
+        $('#searchRoomNo').val('');
+        $('#searchStatus').val('');
         clientTable.ajax.url('/api/clients').load();
     }
 
@@ -231,7 +276,7 @@
         var clientId = $('#nursingLevelClientId').val();
         var nursingLevelId = $('#nursingLevelSelect').val();
         if (!nursingLevelId) {
-            alert('请选择护理等级');
+            showToast('请选择护理等级', 'warning');
             return;
         }
         $.ajax({
@@ -241,15 +286,15 @@
             data: JSON.stringify({ clientId: parseInt(clientId), nursingLevelId: parseInt(nursingLevelId) }),
             success: function(resp) {
                 if (resp.code === 200 || resp.success) {
-                    alert('护理等级分配成功');
+                    showToast('护理等级分配成功', 'success');
                     $('#nursingLevelModal').modal('hide');
                     refreshTable();
                 } else {
-                    alert(resp.message || '分配失败');
+                    showToast(resp.message || '分配失败', 'error');
                 }
             },
             error: function() {
-                alert('请求失败，请重试');
+                showToast('请求失败，请重试', 'error');
             }
         });
     }
@@ -287,22 +332,32 @@
         });
     }
 
-    // 删除老人
-    function deleteClient(id) {
-        if (!confirm('确定要删除该老人信息吗？')) return;
+    var deleteClientId = null;
+
+    // 打开删除确认弹窗
+    function openDeleteModal(id) {
+        deleteClientId = id;
+        $('#deleteConfirmModal').modal('show');
+    }
+
+    // 确认删除老人
+    function confirmDelete() {
+        if (!deleteClientId) return;
         $.ajax({
-            url: '/api/clients/' + id,
+            url: '/api/clients/' + deleteClientId,
             type: 'DELETE',
             success: function(resp) {
                 if (resp.code === 200 || resp.success) {
-                    alert('删除成功');
+                    showToast('删除成功', 'success');
+                    $('#deleteConfirmModal').modal('hide');
+                    deleteClientId = null;
                     refreshTable();
                 } else {
-                    alert(resp.message || '删除失败');
+                    showToast(resp.message || '删除失败', 'error');
                 }
             },
             error: function() {
-                alert('请求失败，请重试');
+                showToast('请求失败，请重试', 'error');
             }
         });
     }

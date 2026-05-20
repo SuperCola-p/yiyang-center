@@ -7,11 +7,26 @@
 </head>
 <body>
     <th:block layout:fragment="content">
-        <h4 class="mb-4"><i class="fas fa-home"></i> 系统首页</h4>
+        <div class="page-title">
+            <i class="fas fa-home"></i> 系统首页
+        </div>
 
         <div th:if="${session.loginUser != null}" class="mb-4">
-            <h5>欢迎您，<span th:text="${session.loginUser.realName}">管理员</span></h5>
-            <p class="text-muted">今天是 <span th:text="${#dates.format(#dates.createNow(), 'yyyy年MM月dd日 EEEE')}"></span></p>
+            <div class="d-flex align-items-center">
+                <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center mr-3"
+                     style="width: 50px; height: 50px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;">
+                    <span style="font-size: 1.2rem; font-weight: 700;" th:text="${#strings.substring(session.loginUser.realName, 0, 1)}">管</span>
+                </div>
+                <div>
+                    <h5 class="mb-1" style="font-weight: 700; color: #2d3748;">
+                        欢迎您，<span th:text="${session.loginUser.realName}">管理员</span>
+                    </h5>
+                    <p class="text-muted mb-0">
+                        <i class="fas fa-calendar-day"></i>
+                        今天是 <span th:text="${#dates.format(#dates.createNow(), 'yyyy年MM月dd日 EEEE')}"></span>
+                    </p>
+                </div>
+            </div>
         </div>
 
         <!-- 统计卡片 -->
@@ -48,70 +63,72 @@
 
         <!-- 快捷入口 -->
         <div class="card mt-4">
-            <div class="card-header">快捷入口</div>
+            <div class="card-header">
+                <i class="fas fa-th"></i> 快捷入口
+            </div>
             <div class="card-body">
                 <div class="row text-center">
                     <div class="col-md-3 mb-3">
                         <a href="/page/nursing-items" class="text-decoration-none">
-                            <div class="p-3 border rounded bg-light">
-                                <i class="fas fa-notes-medical fa-2x text-primary"></i>
-                                <p class="mt-2 mb-0">护理项目</p>
+                            <div class="quick-entry-card">
+                                <i class="fas fa-notes-medical" style="color: #667eea;"></i>
+                                <p>护理项目</p>
                             </div>
                         </a>
                     </div>
                     <div class="col-md-3 mb-3">
                         <a href="/page/nursing-levels" class="text-decoration-none">
-                            <div class="p-3 border rounded bg-light">
-                                <i class="fas fa-layer-group fa-2x text-success"></i>
-                                <p class="mt-2 mb-0">护理等级</p>
+                            <div class="quick-entry-card">
+                                <i class="fas fa-layer-group" style="color: #11998e;"></i>
+                                <p>护理等级</p>
                             </div>
                         </a>
                     </div>
                     <div class="col-md-3 mb-3">
                         <a href="/page/beds" class="text-decoration-none">
-                            <div class="p-3 border rounded bg-light">
-                                <i class="fas fa-bed fa-2x text-info"></i>
-                                <p class="mt-2 mb-0">床位管理</p>
+                            <div class="quick-entry-card">
+                                <i class="fas fa-bed" style="color: #4facfe;"></i>
+                                <p>床位管理</p>
                             </div>
                         </a>
                     </div>
                     <div class="col-md-3 mb-3">
                         <a href="/page/clients" class="text-decoration-none">
-                            <div class="p-3 border rounded bg-light">
-                                <i class="fas fa-users fa-2x text-warning"></i>
-                                <p class="mt-2 mb-0">老人管理</p>
+                            <div class="quick-entry-card">
+                                <i class="fas fa-users" style="color: #f093fb;"></i>
+                                <p>老人管理</p>
                             </div>
                         </a>
                     </div>
                     <div class="col-md-3 mb-3">
                         <a href="/page/nursing-records" class="text-decoration-none">
-                            <div class="p-3 border rounded bg-light">
-                                <i class="fas fa-clipboard-list fa-2x text-danger"></i>
-                                <p class="mt-2 mb-0">护理记录</p>
+                            <div class="quick-entry-card">
+                                <i class="fas fa-clipboard-list" style="color: #ff6b6b;"></i>
+                                <p>护理记录</p>
                             </div>
                         </a>
                     </div>
                     <div class="col-md-3 mb-3">
                         <a href="/page/check-out-applications" class="text-decoration-none">
-                            <div class="p-3 border rounded bg-light">
-                                <i class="fas fa-sign-out-alt fa-2x text-secondary"></i>
-                                <p class="mt-2 mb-0">退住申请</p>
+                            <div class="quick-entry-card">
+                                <i class="fas fa-sign-out-alt" style="color: #a0aec0;"></i>
+                                <p>退住申请</p>
                             </div>
                         </a>
                     </div>
                     <div class="col-md-3 mb-3">
                         <a href="/page/leave-applications" class="text-decoration-none">
-                            <div class="p-3 border rounded bg-light">
-                                <i class="fas fa-calendar-alt fa-2x text-primary"></i>
-                                <p class="mt-2 mb-0">请假管理</p>
+                            <div class="quick-entry-card">
+                                <i class="fas fa-calendar-alt" style="color: #667eea;"></i>
+                                <p>请假管理</p>
                             </div>
                         </a>
                     </div>
                     <div class="col-md-3 mb-3">
                         <a href="/page/operators" class="text-decoration-none">
-                            <div class="p-3 border rounded bg-light">
-                                <i class="fas fa-user-cog fa-2x text-dark"></i>
-                                <p class="mt-2 mb-0">操作员</p>
+                            <div class="quick-entry-card">
+                                <i class="fas fa-user-cog" style="color: #2d3748;"></i>
+                                <p>操作员</p>
                             </div>
                         </a>
                     </div>

@@ -194,6 +194,7 @@ CREATE TABLE IF NOT EXISTS operator (
 -- ---------------------------------------------------
 
 -- 插入默认管理员账号 (密码 123456, BCrypt 加密)
+-- 注意：此哈希由 Spring Security 的 BCryptPasswordEncoder 生成
 INSERT INTO operator (login_code, password, real_name, operator_type, deleted)
-VALUES ('admin', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', '系统管理员', 'ADMIN', 0)
+VALUES ('admin', '$2a$10$cWMMibslCwCOKXVN3QbqkO1f8zN79U7aa/26DR2HeGflM0BEk1hjW', '系统管理员', 'ADMIN', 0)
 ON DUPLICATE KEY UPDATE real_name = VALUES(real_name);

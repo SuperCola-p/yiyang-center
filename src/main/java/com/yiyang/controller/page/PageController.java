@@ -2,6 +2,7 @@ package com.yiyang.controller.page;
 
 import com.yiyang.dto.ApiResponse;
 import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -45,118 +46,138 @@ public class PageController {
     }
 
     @GetMapping("/home")
-    public String home() {
+    public String home(Model model) {
+        model.addAttribute("title", "首页 - 东软颐养中心");
         return "home";
     }
 
     // ========== 护理项目 ==========
 
     @GetMapping("/nursing-items")
-    public String nursingItems() {
+    public String nursingItems(Model model) {
+        model.addAttribute("title", "护理项目管理 - 东软颐养中心");
         return "nursing/list";
     }
 
     @GetMapping("/nursing-items/add")
-    public String nursingItemAdd() {
+    public String nursingItemAdd(Model model) {
+        model.addAttribute("title", "新增护理项目 - 东软颐养中心");
         return "nursing/add";
     }
 
     @GetMapping("/nursing-items/edit")
-    public String nursingItemEdit() {
+    public String nursingItemEdit(Model model) {
+        model.addAttribute("title", "编辑护理项目 - 东软颐养中心");
         return "nursing/edit";
     }
 
     // ========== 护理等级 ==========
 
     @GetMapping("/nursing-levels")
-    public String nursingLevels() {
+    public String nursingLevels(Model model) {
+        model.addAttribute("title", "护理等级管理 - 东软颐养中心");
         return "level/list";
     }
 
     @GetMapping("/nursing-levels/add")
-    public String nursingLevelAdd() {
+    public String nursingLevelAdd(Model model) {
+        model.addAttribute("title", "新增护理等级 - 东软颐养中心");
         return "level/add";
     }
 
     @GetMapping("/nursing-levels/edit")
-    public String nursingLevelEdit() {
+    public String nursingLevelEdit(Model model) {
+        model.addAttribute("title", "编辑护理等级 - 东软颐养中心");
         return "level/edit";
     }
 
     // ========== 床位管理 ==========
 
     @GetMapping("/beds")
-    public String beds() {
+    public String beds(Model model) {
+        model.addAttribute("title", "床位管理 - 东软颐养中心");
         return "bed/list";
     }
 
     @GetMapping("/beds/add")
-    public String bedAdd() {
+    public String bedAdd(Model model) {
+        model.addAttribute("title", "新增床位 - 东软颐养中心");
         return "bed/add";
     }
 
     // ========== 老人管理 ==========
 
     @GetMapping("/clients")
-    public String clients() {
+    public String clients(Model model) {
+        model.addAttribute("title", "老人管理 - 东软颐养中心");
         return "client/list";
     }
 
     @GetMapping("/clients/add")
-    public String clientAdd() {
+    public String clientAdd(Model model) {
+        model.addAttribute("title", "新增老人 - 东软颐养中心");
         return "client/add";
     }
 
     @GetMapping("/clients/edit")
-    public String clientEdit() {
+    public String clientEdit(Model model) {
+        model.addAttribute("title", "编辑老人信息 - 东软颐养中心");
         return "client/edit";
     }
 
     @GetMapping("/clients/nursing")
-    public String clientNursing() {
+    public String clientNursing(Model model) {
+        model.addAttribute("title", "老人护理服务设置 - 东软颐养中心");
         return "client/nursing";
     }
 
     // ========== 护理记录 ==========
 
     @GetMapping("/nursing-records")
-    public String nursingRecords() {
+    public String nursingRecords(Model model) {
+        model.addAttribute("title", "护理记录管理 - 东软颐养中心");
         return "record/list";
     }
 
     @GetMapping("/nursing-records/add")
-    public String nursingRecordAdd() {
+    public String nursingRecordAdd(Model model) {
+        model.addAttribute("title", "新增护理记录 - 东软颐养中心");
         return "record/add";
     }
 
     // ========== 退住申请 ==========
 
     @GetMapping("/check-out-applications")
-    public String checkOutApplications() {
+    public String checkOutApplications(Model model) {
+        model.addAttribute("title", "退住申请管理 - 东软颐养中心");
         return "checkout/list";
     }
 
     @GetMapping("/check-out-applications/add")
-    public String checkOutApplicationAdd() {
+    public String checkOutApplicationAdd(Model model) {
+        model.addAttribute("title", "新增退住申请 - 东软颐养中心");
         return "checkout/add";
     }
 
     // ========== 请假 ==========
 
     @GetMapping("/leave-applications")
-    public String leaveApplications() {
+    public String leaveApplications(Model model) {
+        model.addAttribute("title", "请假管理 - 东软颐养中心");
         return "leave/list";
     }
 
     @GetMapping("/leave-applications/add")
-    public String leaveApplicationAdd() {
+    public String leaveApplicationAdd(Model model) {
+        model.addAttribute("title", "新增请假 - 东软颐养中心");
         return "leave/add";
     }
 
     // ========== 操作员 ==========
 
     @GetMapping("/operators")
-    public String operators() {
+    public String operators(Model model) {
+        model.addAttribute("title", "操作员管理 - 东软颐养中心");
         return "operator/list";
     }
 }

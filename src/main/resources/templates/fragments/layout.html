@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title th:text="${title} + ' - 东软颐养中心'">颐养中心管理系统</title>
+    <title th:text="${title} ?: '颐养中心管理系统'">颐养中心管理系统</title>
     <!-- Bootstrap 4 -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css">
     <!-- Font Awesome 5 -->
@@ -13,7 +13,7 @@
 </head>
 <body>
     <!-- 顶部导航栏 -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-primary fixed-top">
+    <nav class="navbar navbar-expand-lg navbar-dark fixed-top">
         <a class="navbar-brand" href="/page/home">
             <i class="fas fa-heartbeat"></i> 东软颐养中心
         </a>
@@ -30,10 +30,10 @@
                         <i class="fas fa-notes-medical"></i> 护理管理
                     </a>
                     <div class="dropdown-menu">
-                        <a class="dropdown-item" href="/page/nursing-items">护理项目</a>
-                        <a class="dropdown-item" href="/page/nursing-levels">护理等级</a>
-                        <a class="dropdown-item" href="/page/nursing-records">护理记录</a>
-                        <a class="dropdown-item" href="/page/clients/nursing">护理服务设置</a>
+                        <a class="dropdown-item" href="/page/nursing-items"><i class="fas fa-list"></i> 护理项目</a>
+                        <a class="dropdown-item" href="/page/nursing-levels"><i class="fas fa-layer-group"></i> 护理等级</a>
+                        <a class="dropdown-item" href="/page/nursing-records"><i class="fas fa-clipboard-list"></i> 护理记录</a>
+                        <a class="dropdown-item" href="/page/clients/nursing"><i class="fas fa-concierge-bell"></i> 护理服务设置</a>
                     </div>
                 </li>
                 <li class="nav-item">
@@ -47,8 +47,8 @@
                         <i class="fas fa-file-alt"></i> 申请管理
                     </a>
                     <div class="dropdown-menu">
-                        <a class="dropdown-item" href="/page/check-out-applications">退住申请</a>
-                        <a class="dropdown-item" href="/page/leave-applications">请假管理</a>
+                        <a class="dropdown-item" href="/page/check-out-applications"><i class="fas fa-sign-out-alt"></i> 退住申请</a>
+                        <a class="dropdown-item" href="/page/leave-applications"><i class="fas fa-calendar-alt"></i> 请假管理</a>
                     </div>
                 </li>
                 <li class="nav-item" th:if="${session.loginUser != null and session.loginUser.operatorType == 'ADMIN'}">
@@ -63,6 +63,7 @@
                     </a>
                     <div class="dropdown-menu dropdown-menu-right">
                         <span class="dropdown-item-text text-muted">
+                            <i class="fas fa-tag"></i>
                             类型: <span th:text="${session.loginUser.operatorType}">ADMIN</span>
                         </span>
                         <div class="dropdown-divider"></div>

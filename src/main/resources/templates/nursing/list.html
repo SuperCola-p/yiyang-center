@@ -7,33 +7,36 @@
 </head>
 <body>
     <th:block layout:fragment="content">
-        <h4 class="mb-4"><i class="fas fa-notes-medical"></i> 护理项目管理</h4>
+        <div class="page-title">
+            <i class="fas fa-notes-medical"></i> 护理项目管理
+        </div>
 
         <!-- 搜索 + 新增 -->
-        <div class="card mb-4">
-            <div class="card-body">
-                <div class="row">
-                    <div class="col-md-6">
-                        <div class="input-group">
-                            <input type="text" class="form-control" id="searchName" placeholder="按项目名称搜索...">
-                            <div class="input-group-append">
-                                <button class="btn btn-primary" onclick="loadData()">
-                                    <i class="fas fa-search"></i> 搜索
-                                </button>
-                            </div>
+        <div class="search-bar">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="input-group">
+                        <input type="text" class="form-control" id="searchName" placeholder="按项目名称搜索...">
+                        <div class="input-group-append">
+                            <button class="btn btn-primary" onclick="loadData()">
+                                <i class="fas fa-search"></i> 搜索
+                            </button>
                         </div>
                     </div>
-                    <div class="col-md-6 text-right">
-                        <a href="/page/nursing-items/add" class="btn btn-success">
-                            <i class="fas fa-plus"></i> 新增护理项目
-                        </a>
-                    </div>
+                </div>
+                <div class="col-md-6 text-right">
+                    <a href="/page/nursing-items/add" class="btn btn-success">
+                        <i class="fas fa-plus"></i> 新增护理项目
+                    </a>
                 </div>
             </div>
         </div>
 
         <!-- 表格 -->
         <div class="card">
+            <div class="card-header">
+                <i class="fas fa-list"></i> 护理项目列表
+            </div>
             <div class="card-body">
                 <div class="table-responsive">
                     <table class="table table-bordered table-hover" id="dataTable">
@@ -51,7 +54,7 @@
                         </thead>
                         <tbody id="tableBody">
                             <tr id="loadingRow">
-                                <td colspan="8" class="text-center text-muted">
+                                <td colspan="8" class="loading-state">
                                     <i class="fas fa-spinner fa-spin"></i> 加载中...
                                 </td>
                             </tr>
@@ -66,7 +69,7 @@
             <div class="modal-dialog">
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h5 class="modal-title">确认删除</h5>
+                        <h5 class="modal-title"><i class="fas fa-exclamation-triangle text-danger"></i> 确认删除</h5>
                         <button type="button" class="close" data-dismiss="modal">&times;</button>
                     </div>
                     <div class="modal-body">
@@ -96,18 +99,18 @@
             if (name) {
                 url += '?name=' + encodeURIComponent(name);
             }
-            $('#tableBody').html('<tr><td colspan="8" class="text-center text-muted"><i class="fas fa-spinner fa-spin"></i> 加载中...</td></tr>');
+            $('#tableBody').html('<tr><td colspan="8" class="loading-state"><i class="fas fa-spinner fa-spin"></i> 加载中...</td></tr>');
             $.get(url, function(resp) {
                 var items = resp.data || resp || [];
                 renderTable(items);
             }).fail(function() {
-                $('#tableBody').html('<tr><td colspan="8" class="text-center text-danger">加载失败，请刷新重试</td></tr>');
+                $('#tableBody').html('<tr><td colspan="8" class="empty-state"><i class="fas fa-exclamation-circle"></i><p>加载失败，请刷新重试</p></td></tr>');
             });
         }
 
         function renderTable(items) {
             if (!items || items.length === 0) {
-                $('#tableBody').html('<tr><td colspan="8" class="text-center text-muted">暂无数据</td></tr>');
+                $('#tableBody').html('<tr><td colspan="8" class="empty-state"><i class="fas fa-inbox"></i><p>暂无护理项目数据</p></td></tr>');
                 return;
             }
             var html = '';
@@ -151,28 +154,30 @@
         function toggleStatus(id, currentStatus) {
             var newStatus = currentStatus === 'ENABLED' ? 'DISABLED' : 'ENABLED';
             var actionLabel = newStatus === 'ENABLED' ? '启用' : '禁用';
-            if (!confirm('确定要' + actionLabel + '该护理项目吗？')) return;
-
-            $.ajax({
-                url: '/api/nursing-items/' + id + '/status',
-                type: 'PUT',
-                contentType: 'application/json',
-                data: JSON.stringify({ status: newStatus }),
-                success: function(resp) {
-                    if (resp && resp.success === false) {
-                        alert(resp.message || '操作失败');
-                    } else {
-                        loadData();
+            showConfirm('确定要' + actionLabel + '该护理项目吗？', function(ok) {
+                if (!ok) return;
+                $.ajax({
+                    url: '/api/nursing-items/' + id + '/status',
+                    type: 'PUT',
+                    contentType: 'application/json',
+                    data: JSON.stringify({ status: newStatus }),
+                    success: function(resp) {
+                        if (resp && resp.success === false) {
+                            showToast(resp.message || '操作失败', 'error');
+                        } else {
+                            showToast(actionLabel + '成功', 'success');
+                            loadData();
+                        }
+                    },
+                    error: function(xhr) {
+                        try {
+                            var resp = JSON.parse(xhr.responseText);
+                            showToast(resp.message || '操作失败', 'error');
+                        } catch(e) {
+                            showToast('网络错误，请重试', 'error');
+                        }
                     }
-                },
-                error: function(xhr) {
-                    try {
-                        var resp = JSON.parse(xhr.responseText);
-                        alert(resp.message || '操作失败');
-                    } catch(e) {
-                        alert('网络错误，请重试');
-                    }
-                }
+                });
             });
         }
 
@@ -189,8 +194,9 @@
                 type: 'DELETE',
                 success: function(resp) {
                     if (resp && resp.success === false) {
-                        alert(resp.message || '删除失败');
+                        showToast(resp.message || '删除失败', 'error');
                     } else {
+                        showToast('删除成功', 'success');
                         $('#deleteModal').modal('hide');
                         deleteId = null;
                         loadData();
@@ -199,9 +205,9 @@
                 error: function(xhr) {
                     try {
                         var resp = JSON.parse(xhr.responseText);
-                        alert(resp.message || '删除失败');
+                        showToast(resp.message || '删除失败', 'error');
                     } catch(e) {
-                        alert('网络错误，请重试');
+                        showToast('网络错误，请重试', 'error');
                     }
                 }
             });

@@ -33,3 +33,19 @@
   - OperatorController.login 注入 HttpSession 直接设 loginUser，移除前端 setSession 回调
   - OperatorServiceImpl 引入 BCryptPasswordEncoder，登录改为 findById+matches() 方式
   - client/list.html 护理等级 API 从 PUT /{id}/nursing-level 改为 POST /assign-level，传 nursingLevelId
+- 2026-05-20: 修复"点击分选项后进入空白页"核心bug（layout.html中${title}变量未设置导致Thymeleaf渲染异常）
+  - layout.html 使用 `${title} ?:` 默认值
+  - PageController 所有方法添加 model.addAttribute("title", ...)
+- 2026-05-20: 全面UI美化（仿login渐变、圆角、阴影风格）
+  - style.css 重写：渐变导航栏、圆角12px卡片、渐变按钮/badge、表单聚焦光影、悬浮效果
+  - layout.html 升级：导航栏渐变背景+阴影、下拉菜单美化
+  - 所有22个管理页面使用 .page-title / .search-bar / card-header图标 / modal-header图标
+- 2026-05-20: common.js 新增 showLoading() / showEmpty() 工具函数
+- **样式约定**：全局CSS中包含 .page-title(渐变下划线边框) / .search-bar(白色卡片微阴影) / .loading-state(居中灰色图标) / .empty-state(居中大图标托底) / .quick-entry-card(悬浮上移动画) — 所有页面统一使用
+- 2026-05-20: 全面优化排版与背景
+  - body.login-page 改为全屏 flex 居中容器（display:flex），渐变背景直接设在 body 上
+  - 登录页装饰性浮动气泡使用 body::before/::after 伪元素（原 login-wrapper 伪元素移除）
+  - 修复 body `padding-top:56px` 与登录页兼容（body.login-page 重置为 padding-top:0）
+  - 新增 .toast-notification slideInRight 动画
+  - 新增 DataTables 分页、Select2、表格首末列内边距兼容样式
+  - 响应式：登录卡片移动端适配 max-width:95%，padding 压缩
