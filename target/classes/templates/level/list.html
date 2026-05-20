@@ -94,8 +94,10 @@
 
     function loadItemCount(levelId) {
         $.get('/api/nursing-levels/' + levelId + '/items', function(resp) {
-            var ids = resp.data || resp || [];
-            $('#itemCount_' + levelId).text(ids.length);
+            var items = resp.data || resp || [];
+            // items 可能是对象数组或ID数组，统一取长度
+            var count = Array.isArray(items) ? items.length : 0;
+            $('#itemCount_' + levelId).text(count);
         });
     }
 
@@ -125,7 +127,14 @@
             var items = itemsResp.data || itemsResp || [];
             // 加载已关联项目
             $.get('/api/nursing-levels/' + levelId + '/items', function(linkResp) {
-                var linkedIds = linkResp.data || linkResp || [];
+                var linkedData = linkResp.data || linkResp || [];
+                // 统一处理：提取 itemId 数组（若返回对象数组）或直接作为ID数组
+                var linkedIds;
+                if (linkedData.length > 0 && typeof linkedData[0] === 'object') {
+                    linkedIds = linkedData.map(function(li) { return li.itemId; });
+                } else {
+                    linkedIds = linkedData;
+                }
                 var html = '';
                 items.forEach(function(item) {
                     if (item.isDeleted) return;

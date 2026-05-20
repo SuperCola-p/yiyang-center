@@ -146,16 +146,24 @@
                 $('#statNursingItems').text(activeItems.length);
             });
 
-            // 待审核申请（退住+请假）
+            // 待审核申请（退住+请假）— 使用计数器模式避免竞态条件
             var pending = 0;
+            var completed = 0;
+            function tryUpdatePending() {
+                completed++;
+                if (completed >= 2) {
+                    $('#statPending').text(pending);
+                }
+            }
             $.get('/api/check-out-applications', function(resp) {
                 var list = resp.data || resp || [];
                 pending += list.filter(function(a) { return a.status === '已提交'; }).length;
+                tryUpdatePending();
             });
             $.get('/api/leave-applications', function(resp) {
                 var list = resp.data || resp || [];
                 pending += list.filter(function(a) { return a.status === '已提交'; }).length;
-                $('#statPending').text(pending);
+                tryUpdatePending();
             });
         }
         loadStats();

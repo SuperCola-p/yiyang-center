@@ -624,7 +624,7 @@ public class MainMenuCommand {
         for (CheckOutApplication a : list) {
             String time = a.getTime() != null ? a.getTime().format(DTF) : "-";
             System.out.printf("%-15s %-10s %-10s %-20s %-10s %-10s%n",
-                    a.getId(), a.getClientName(), a.getType(), time, a.getStatue(), a.getAuditor());
+                    a.getId(), a.getClientName(), a.getType(), time, a.getStatus(), a.getAuditor());
         }
     }
 
@@ -637,7 +637,7 @@ public class MainMenuCommand {
             System.out.print("原因: "); app.setReason(scanner.nextLine());
             app.setTime(LocalDateTime.now());
             app.setId("CO-" + System.currentTimeMillis());
-            app.setStatue("已提交");
+            app.setStatus("已提交");
             checkOutApplicationRepository.save(app);
             System.out.println("申请提交成功，编号: " + app.getId());
         } catch (Exception e) {
@@ -653,7 +653,7 @@ public class MainMenuCommand {
         System.out.print("是否同意(y/n): ");
         boolean approve = "y".equalsIgnoreCase(scanner.nextLine().trim());
         CheckOutApplication app = opt.get();
-        app.setStatue(approve ? "已通过" : "已拒绝");
+        app.setStatus(approve ? "已通过" : "已拒绝");
         app.setAuditor(auditor);
         app.setAuditTime(LocalDateTime.now());
         checkOutApplicationRepository.save(app);
@@ -685,7 +685,7 @@ public class MainMenuCommand {
         for (LeaveApplication a : list) {
             String time = a.getLeaveTime() != null ? a.getLeaveTime().format(DTF) : "-";
             System.out.printf("%-15s %-10s %-20s %-10s %-10s%n",
-                    a.getId(), a.getClientName(), time, a.getStatue(), a.getAuditor());
+                    a.getId(), a.getClientName(), time, a.getStatus(), a.getAuditor());
         }
     }
 
@@ -700,7 +700,7 @@ public class MainMenuCommand {
             System.out.print("预计结束(yyyy-MM-dd HH:mm): ");
             app.setPredictedEnd(LocalDateTime.parse(scanner.nextLine(), DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")));
             app.setId("LV-" + System.currentTimeMillis());
-            app.setStatue("已提交");
+            app.setStatus("已提交");
             leaveApplicationRepository.save(app);
             System.out.println("请假提交成功，编号: " + app.getId());
         } catch (Exception e) {
@@ -716,7 +716,7 @@ public class MainMenuCommand {
         System.out.print("是否同意(y/n): ");
         boolean approve = "y".equalsIgnoreCase(scanner.nextLine().trim());
         LeaveApplication app = opt.get();
-        app.setStatue(approve ? "已通过" : "已拒绝");
+        app.setStatus(approve ? "已通过" : "已拒绝");
         app.setAuditor(auditor);
         app.setAuditTime(LocalDateTime.now());
         leaveApplicationRepository.save(app);

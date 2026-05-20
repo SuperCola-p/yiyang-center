@@ -10,7 +10,7 @@
     </th:block>
 </head>
 <body>
-<div layout:fragment="content">
+<th:block layout:fragment="content">
     <!-- 页面标题 -->
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h5 class="mb-0"><i class="fas fa-bed text-primary"></i> 床位管理</h5>
@@ -212,7 +212,7 @@
             </div>
         </div>
     </div>
-</div>
+</th:block>
 
 <th:block layout:fragment="script-extra">
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
@@ -489,13 +489,6 @@
             });
         }
 
-        // ==================== 工具函数 ====================
-        function escapeHtml(text) {
-            if (!text) return '';
-            var div = document.createElement('div');
-            div.appendChild(document.createTextNode(text));
-            return div.innerHTML;
-        }
     </script>
 </th:block>
 </body>
