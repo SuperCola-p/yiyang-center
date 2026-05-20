@@ -1,0 +1,43 @@
+# Auto detect text files and perform LF normalization
+* text=auto
+
+# Java source
+*.java text diff=java
+
+# HTML templates
+*.html text
+
+# CSS
+*.css text
+
+# JavaScript
+*.js text
+
+# YAML / YML
+*.yml text
+*.yaml text
+
+# SQL
+*.sql text
+
+# Markdown
+*.md text
+
+# XML
+*.xml text
+
+# Property files
+*.properties text
+
+# Binary files (never normalize)
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.woff binary
+*.woff2 binary
+*.eot binary
+*.ttf binary
+*.otf binary
+*.jar binary
