@@ -28,3 +28,12 @@ bin/
 
 ### Mac OS ###
 .DS_Store
+
+### WorkBuddy / target ###
+target/
+.workbuddy/
+
+### Windows reserved names ###
+nul
+NUL
+Nul

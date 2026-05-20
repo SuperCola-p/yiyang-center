@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{fragments/layout}">
+<head>
+    <title th:text="'新增老人'">新增老人</title>
+</head>
+<body>
+    <th:block layout:fragment="content">
+        <h4 class="mb-4"><i class="fas fa-user-plus"></i> 新增老人</h4>
+
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-edit"></i> 基本信息
+            </div>
+            <div class="card-body">
+                <form id="clientForm">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label>姓名 <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="name" required>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label>年龄 <span class="text-danger">*</span></label>
+                                <input type="number" class="form-control" id="age" min="0" max="150" required>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label>性别 <span class="text-danger">*</span></label>
+                                <select class="form-control" id="gender" required>
+                                    <option value="">请选择</option>
+                                    <option value="男">男</option>
+                                    <option value="女">女</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label>血型</label>
+                                <input type="text" class="form-control" id="bloodType" placeholder="如：A型、B型等">
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label>联系电话 <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="phone" required>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label>紧急联系人</label>
+                                <input type="text" class="form-control" id="familyContact">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label>身份证号 <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="idCard" required>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label>出生日期</label>
+                                <input type="date" class="form-control" id="birthday">
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label>入住日期 <span class="text-danger">*</span></label>
+                                <input type="date" class="form-control" id="checkInDate" required>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label>合同到期日</label>
+                                <input type="date" class="form-control" id="contractExpireDate">
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label>护理等级</label>
+                                <select class="form-control" id="nursingLevel">
+                                    <option value="">请选择</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label>护工</label>
+                                <input type="text" class="form-control" id="nurse">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label>健康状况</label>
+                                <input type="text" class="form-control" id="healthStatus">
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label>类型 <span class="text-danger">*</span></label>
+                                <select class="form-control" id="type" required>
+                                    <option value="">请选择</option>
+                                    <option value="自理">自理</option>
+                                    <option value="半自理">半自理</option>
+                                    <option value="全护理">全护理</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label>楼栋号 <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="buildingNo" required>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label>房间号 <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="roomNo" required>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label>床位号 <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="bedNo" required>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row mt-4">
+                        <div class="col-md-12">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i> 保存
+                            </button>
+                            <a href="/page/clients" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left"></i> 返回列表
+                            </a>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </th:block>
+
+    <th:block layout:fragment="script-extra">
+    <script>
+    $(function() {
+        // 加载护理等级下拉选项
+        $.get('/api/nursing-levels', function(resp) {
+            var list = resp.data || resp || [];
+            var sel = $('#nursingLevel');
+            $.each(list, function(i, item) {
+                sel.append('<option value="' + (item.name || item.nursingLevelName) + '">' + (item.name || item.nursingLevelName) + '</option>');
+            });
+        });
+
+        // 表单提交
+        $('#clientForm').submit(function(e) {
+            e.preventDefault();
+
+            var data = {
+                name: $('#name').val().trim(),
+                age: parseInt($('#age').val()) || 0,
+                gender: $('#gender').val(),
+                bloodType: $('#bloodType').val().trim(),
+                phone: $('#phone').val().trim(),
+                familyContact: $('#familyContact').val().trim(),
+                idCard: $('#idCard').val().trim(),
+                buildingNo: $('#buildingNo').val().trim(),
+                roomNo: $('#roomNo').val().trim(),
+                bedNo: $('#bedNo').val().trim(),
+                birthday: $('#birthday').val(),
+                checkInDate: $('#checkInDate').val(),
+                contractExpireDate: $('#contractExpireDate').val(),
+                nursingLevel: $('#nursingLevel').val(),
+                nurse: $('#nurse').val().trim(),
+                healthStatus: $('#healthStatus').val().trim(),
+                type: $('#type').val()
+            };
+
+            // 校验必填字段
+            if (!data.name) { showToast('请输入姓名', 'warning'); return; }
+            if (!data.age) { showToast('请输入年龄', 'warning'); return; }
+            if (!data.gender) { showToast('请选择性别', 'warning'); return; }
+            if (!data.phone) { showToast('请输入联系电话', 'warning'); return; }
+            if (!data.idCard) { showToast('请输入身份证号', 'warning'); return; }
+            if (!data.checkInDate) { showToast('请选择入住日期', 'warning'); return; }
+            if (!data.type) { showToast('请选择类型', 'warning'); return; }
+            if (!data.buildingNo) { showToast('请输入楼栋号', 'warning'); return; }
+            if (!data.roomNo) { showToast('请输入房间号', 'warning'); return; }
+            if (!data.bedNo) { showToast('请输入床位号', 'warning'); return; }
+
+            $.ajax({
+                url: '/api/clients',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(data),
+                success: function(resp) {
+                    if (resp.code === 200 || resp.success) {
+                        showToast('新增成功', 'success');
+                        window.location.href = '/page/clients';
+                    } else {
+                        showToast(resp.message || '新增失败', 'error');
+                    }
+                },
+                error: function() {
+                    showToast('请求失败，请重试', 'error');
+                }
+            });
+        });
+    });
+    </script>
+    </th:block>
+</body>
+</html>

@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{fragments/layout}">
+<head>
+    <title th:text="'新增请假'">新增请假</title>
+</head>
+<body>
+<div layout:fragment="content">
+    <!-- 页面标题 -->
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="mb-0"><i class="fas fa-calendar-plus text-info"></i> 新增请假</h5>
+        <a href="/page/leave-applications" class="btn btn-outline-secondary btn-sm">
+            <i class="fas fa-arrow-left"></i> 返回列表
+        </a>
+    </div>
+
+    <!-- 表单卡片 -->
+    <div class="card">
+        <div class="card-header">
+            <i class="fas fa-file-alt"></i> 请假申请信息
+        </div>
+        <div class="card-body">
+            <form id="leaveForm">
+                <!-- 老人选择 -->
+                <div class="form-group">
+                    <label>选择老人 <span class="text-danger">*</span></label>
+                    <select class="form-control" id="clientId" style="width:100%;">
+                        <option value="">-- 请选择老人 --</option>
+                    </select>
+                    <input type="hidden" id="clientName">
+                </div>
+
+                <!-- 请假事由 -->
+                <div class="form-group">
+                    <label>请假事由 <span class="text-danger">*</span></label>
+                    <textarea class="form-control" id="reason" rows="3" placeholder="请输入请假事由"></textarea>
+                </div>
+
+                <!-- 请假时间 -->
+                <div class="form-group">
+                    <label>请假时间 <span class="text-danger">*</span></label>
+                    <input type="datetime-local" class="form-control" id="leaveTime">
+                </div>
+
+                <!-- 预计结束时间 -->
+                <div class="form-group">
+                    <label>预计结束时间 <span class="text-danger">*</span></label>
+                    <input type="datetime-local" class="form-control" id="predictedEnd">
+                </div>
+
+                <!-- 提交按钮 -->
+                <div class="text-center mt-4">
+                    <button type="button" class="btn btn-primary btn-lg px-5" onclick="submitLeave()">
+                        <i class="fas fa-paper-plane"></i> 提交申请
+                    </button>
+                    <a href="/page/leave-applications" class="btn btn-secondary btn-lg px-4 ml-2">
+                        <i class="fas fa-times"></i> 取消
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<th:block layout:fragment="script-extra">
+    <script>
+        // ==================== 页面初始化 ====================
+        $(function() {
+            loadClients();
+        });
+
+        // ==================== 加载老人列表 ====================
+        function loadClients() {
+            $.get('/api/clients', function(res) {
+                if (res.code === 200 && res.data) {
+                    var sel = $('#clientId');
+                    sel.empty().append('<option value="">-- 请选择老人 --</option>');
+                    $.each(res.data, function(i, c) {
+                        sel.append('<option value="' + c.id + '" data-name="' + escapeHtml(c.name) + '">' +
+                            escapeHtml(c.name) + ' (ID: ' + c.id + ')</option>');
+                    });
+                } else {
+                    showToast(res.message || '加载老人列表失败', 'error');
+                }
+            }).fail(function() {
+                showToast('网络异常，加载老人列表失败', 'error');
+            });
+        }
+
+        // ==================== 老人选择变化时自动填充姓名 ====================
+        $('#clientId').on('change', function() {
+            var selected = $(this).find('option:selected');
+            var name = selected.data('name') || '';
+            $('#clientName').val(name);
+        });
+
+        // ==================== 提交请假 ====================
+        function submitLeave() {
+            var clientId = $('#clientId').val();
+            var clientName = $('#clientName').val();
+            var reason = $('#reason').val().trim();
+            var leaveTime = $('#leaveTime').val();
+            var predictedEnd = $('#predictedEnd').val();
+
+            // 校验
+            if (!clientId) {
+                showToast('请选择老人', 'warning');
+                return;
+            }
+            if (!reason) {
+                showToast('请输入请假事由', 'warning');
+                return;
+            }
+            if (!leaveTime) {
+                showToast('请选择请假时间', 'warning');
+                return;
+            }
+            if (!predictedEnd) {
+                showToast('请选择预计结束时间', 'warning');
+                return;
+            }
+
+            // 校验结束时间不能在开始时间之前
+            if (new Date(predictedEnd) <= new Date(leaveTime)) {
+                showToast('预计结束时间必须晚于请假时间', 'warning');
+                return;
+            }
+
+            // 将 datetime-local 转为 ISO 格式
+            var leaveDate = new Date(leaveTime);
+            var endDate = new Date(predictedEnd);
+
+            var data = {
+                clientId: parseInt(clientId),
+                clientName: clientName,
+                reason: reason,
+                leaveTime: leaveDate.toISOString(),
+                predictedEnd: endDate.toISOString()
+            };
+
+            $.ajax({
+                url: '/api/leave-applications',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(data),
+                success: function(res) {
+                    if (res.code === 200) {
+                        showToast('请假申请提交成功', 'success');
+                        setTimeout(function() {
+                            window.location.href = '/page/leave-applications';
+                        }, 500);
+                    } else {
+                        showToast(res.message || '提交失败', 'error');
+                    }
+                },
+                error: function() {
+                    showToast('网络异常，提交失败', 'error');
+                }
+            });
+        }
+
+        // ==================== 工具函数 ====================
+        function escapeHtml(text) {
+            if (!text) return '';
+            var div = document.createElement('div');
+            div.appendChild(document.createTextNode(text));
+            return div.innerHTML;
+        }
+    </script>
+</th:block>
+</body>
+</html>

@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{fragments/layout}">
+<head>
+    <title th:text="'新增护理记录'">新增护理记录</title>
+</head>
+<body>
+    <th:block layout:fragment="content">
+        <h4 class="mb-4"><i class="fas fa-plus-circle"></i> 新增护理记录</h4>
+
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-header">
+                        <i class="fas fa-notes-medical"></i> 护理记录信息
+                    </div>
+                    <div class="card-body">
+                        <form id="addForm">
+                            <div class="form-group">
+                                <label><span class="text-danger">*</span> 老人</label>
+                                <select class="form-control" id="clientId" required>
+                                    <option value="">请选择老人</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label><span class="text-danger">*</span> 护理项目</label>
+                                <select class="form-control" id="nursingItemId" required>
+                                    <option value="">请选择护理项目</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label><span class="text-danger">*</span> 护理员 ID</label>
+                                <input type="text" class="form-control" id="healthAssistantId" placeholder="请输入护理员 ID" required>
+                            </div>
+                            <div class="form-group">
+                                <label><span class="text-danger">*</span> 护理时间</label>
+                                <input type="datetime-local" class="form-control" id="nursingTime" required>
+                            </div>
+                            <div class="form-group">
+                                <label><span class="text-danger">*</span> 执行次数</label>
+                                <input type="number" class="form-control" id="execQuantity" min="1" value="1" required>
+                            </div>
+                            <div class="form-group">
+                                <label>备注</label>
+                                <textarea class="form-control" id="remarks" rows="3" placeholder="可选填写备注信息"></textarea>
+                            </div>
+                            <div class="form-group text-right">
+                                <a th:href="@{/page/nursing-records}" class="btn btn-secondary">
+                                    <i class="fas fa-arrow-left"></i> 返回
+                                </a>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-save"></i> 提交
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </th:block>
+
+    <th:block layout:fragment="script-extra">
+    <script>
+    $(function() {
+        // 加载老人下拉
+        $.get('/api/clients', function(resp) {
+            var clients = resp.data || resp || [];
+            var sel = $('#clientId');
+            clients.forEach(function(c) {
+                if (!c.deleted) {
+                    sel.append('<option value="' + c.id + '">' + c.name + '</option>');
+                }
+            });
+        });
+
+        // 加载护理项目下拉（只显示 ENABLED）
+        $.get('/api/nursing-items', function(resp) {
+            var items = resp.data || resp || [];
+            var sel = $('#nursingItemId');
+            items.forEach(function(item) {
+                if (item.status === 'ENABLED') {
+                    sel.append('<option value="' + item.id + '">' + item.name + '</option>');
+                }
+            });
+        });
+
+        // 提交表单
+        $('#addForm').submit(function(e) {
+            e.preventDefault();
+            var data = {
+                clientId: parseInt($('#clientId').val()),
+                nursingItemId: parseInt($('#nursingItemId').val()),
+                healthAssistantId: $('#healthAssistantId').val().trim(),
+                nursingTime: $('#nursingTime').val(),
+                execQuantity: parseInt($('#execQuantity').val()),
+                remarks: $('#remarks').val().trim()
+            };
+
+            if (!data.clientId || !data.nursingItemId || !data.healthAssistantId || !data.nursingTime) {
+                showToast('请填写完整信息', 'warning');
+                return;
+            }
+
+            $.ajax({
+                url: '/api/nursing-records',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(data),
+                success: function(resp) {
+                    if (resp.code === 200 || resp.success) {
+                        showToast('新增成功', 'success');
+                        setTimeout(function() {
+                            window.location.href = '/page/nursing-records';
+                        }, 1000);
+                    } else {
+                        showToast(resp.message || '新增失败', 'danger');
+                    }
+                },
+                error: function() {
+                    showToast('新增失败，请稍后重试', 'danger');
+                }
+            });
+        });
+    });
+    </script>
+    </th:block>
+</body>
+</html>

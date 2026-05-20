@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{fragments/layout}">
+<head>
+    <title>新增护理等级</title>
+</head>
+<body>
+    <th:block layout:fragment="content">
+        <h4 class="mb-4"><i class="fas fa-plus"></i> 新增护理等级</h4>
+
+        <div class="card">
+            <div class="card-body">
+                <form id="levelForm">
+                    <div class="form-group">
+                        <label>等级名称 <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="levelName" required>
+                    </div>
+                    <div class="form-group">
+                        <label>状态</label>
+                        <select class="form-control" id="status">
+                            <option value="ENABLED">启用</option>
+                            <option value="DISABLED">禁用</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>关联护理项目</label>
+                        <div id="itemCheckboxes"></div>
+                    </div>
+                    <button type="submit" class="btn btn-primary">保存</button>
+                    <a href="/page/nursing-levels" class="btn btn-secondary">取消</a>
+                </form>
+            </div>
+        </div>
+    </th:block>
+
+    <th:block layout:fragment="script-extra">
+    <script>
+    $(function() {
+        // 加载护理项目
+        $.get('/api/nursing-items', function(resp) {
+            var items = resp.data || resp || [];
+            var html = '';
+            items.forEach(function(item) {
+                if (item.isDeleted) return;
+                html += '<div class="form-check form-check-inline">' +
+                    '<input class="form-check-input item-cb" type="checkbox" value="' + item.id + '">' +
+                    '<label class="form-check-label">' + item.name + '</label>' +
+                '</div>';
+            });
+            $('#itemCheckboxes').html(html);
+        });
+
+        $('#levelForm').on('submit', function(e) {
+            e.preventDefault();
+            var itemIds = [];
+            $('.item-cb:checked').each(function() { itemIds.push(parseInt($(this).val())); });
+            var data = {
+                levelName: $('#levelName').val().trim(),
+                status: $('#status').val(),
+                itemIds: itemIds
+            };
+            $.ajax({
+                url: '/api/nursing-levels',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(data),
+                success: function(resp) {
+                    showToast('新增成功', 'success');
+                    window.location.href = '/page/nursing-levels';
+                },
+                error: function(xhr) {
+                    var msg = xhr.responseJSON && xhr.responseJSON.message ? xhr.responseJSON.message : '新增失败';
+                    showToast(msg, 'error');
+                }
+            });
+        });
+    });
+    </script>
+    </th:block>
+</body>
+</html>

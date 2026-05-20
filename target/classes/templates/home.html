@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{fragments/layout}">
+<head>
+    <title th:text="'首页'">首页</title>
+</head>
+<body>
+    <th:block layout:fragment="content">
+        <h4 class="mb-4"><i class="fas fa-home"></i> 系统首页</h4>
+
+        <div th:if="${session.loginUser != null}" class="mb-4">
+            <h5>欢迎您，<span th:text="${session.loginUser.realName}">管理员</span></h5>
+            <p class="text-muted">今天是 <span th:text="${#dates.format(#dates.createNow(), 'yyyy年MM月dd日 EEEE')}"></span></p>
+        </div>
+
+        <!-- 统计卡片 -->
+        <div class="row" id="statCards">
+            <div class="col-md-3">
+                <div class="stat-card bg-stat-blue">
+                    <i class="fas fa-users stat-icon"></i>
+                    <p class="stat-number" id="statClients">-</p>
+                    <p class="stat-label">在住老人</p>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-card bg-stat-green">
+                    <i class="fas fa-bed stat-icon"></i>
+                    <p class="stat-number" id="statBeds">-</p>
+                    <p class="stat-label">空闲床位</p>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-card bg-stat-orange">
+                    <i class="fas fa-notes-medical stat-icon"></i>
+                    <p class="stat-number" id="statNursingItems">-</p>
+                    <p class="stat-label">护理项目</p>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-card bg-stat-teal">
+                    <i class="fas fa-file-alt stat-icon"></i>
+                    <p class="stat-number" id="statPending">-</p>
+                    <p class="stat-label">待审核申请</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 快捷入口 -->
+        <div class="card mt-4">
+            <div class="card-header">快捷入口</div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-md-3 mb-3">
+                        <a href="/page/nursing-items" class="text-decoration-none">
+                            <div class="p-3 border rounded bg-light">
+                                <i class="fas fa-notes-medical fa-2x text-primary"></i>
+                                <p class="mt-2 mb-0">护理项目</p>
+                            </div>
+                        </a>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <a href="/page/nursing-levels" class="text-decoration-none">
+                            <div class="p-3 border rounded bg-light">
+                                <i class="fas fa-layer-group fa-2x text-success"></i>
+                                <p class="mt-2 mb-0">护理等级</p>
+                            </div>
+                        </a>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <a href="/page/beds" class="text-decoration-none">
+                            <div class="p-3 border rounded bg-light">
+                                <i class="fas fa-bed fa-2x text-info"></i>
+                                <p class="mt-2 mb-0">床位管理</p>
+                            </div>
+                        </a>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <a href="/page/clients" class="text-decoration-none">
+                            <div class="p-3 border rounded bg-light">
+                                <i class="fas fa-users fa-2x text-warning"></i>
+                                <p class="mt-2 mb-0">老人管理</p>
+                            </div>
+                        </a>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <a href="/page/nursing-records" class="text-decoration-none">
+                            <div class="p-3 border rounded bg-light">
+                                <i class="fas fa-clipboard-list fa-2x text-danger"></i>
+                                <p class="mt-2 mb-0">护理记录</p>
+                            </div>
+                        </a>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <a href="/page/check-out-applications" class="text-decoration-none">
+                            <div class="p-3 border rounded bg-light">
+                                <i class="fas fa-sign-out-alt fa-2x text-secondary"></i>
+                                <p class="mt-2 mb-0">退住申请</p>
+                            </div>
+                        </a>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <a href="/page/leave-applications" class="text-decoration-none">
+                            <div class="p-3 border rounded bg-light">
+                                <i class="fas fa-calendar-alt fa-2x text-primary"></i>
+                                <p class="mt-2 mb-0">请假管理</p>
+                            </div>
+                        </a>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <a href="/page/operators" class="text-decoration-none">
+                            <div class="p-3 border rounded bg-light">
+                                <i class="fas fa-user-cog fa-2x text-dark"></i>
+                                <p class="mt-2 mb-0">操作员</p>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </th:block>
+
+    <th:block layout:fragment="script-extra">
+    <script>
+    $(function() {
+        // 加载统计数据
+        function loadStats() {
+            // 老人数量
+            $.get('/api/clients', function(resp) {
+                var clients = resp.data || resp || [];
+                var activeClients = clients.filter(function(c) { return !c.deleted; });
+                $('#statClients').text(activeClients.length);
+            });
+
+            // 空闲床位
+            $.get('/api/beds', function(resp) {
+                var beds = resp.data || resp || [];
+                var freeBeds = beds.filter(function(b) { return b.bedStatus === 1; });
+                $('#statBeds').text(freeBeds.length);
+            });
+
+            // 护理项目
+            $.get('/api/nursing-items', function(resp) {
+                var items = resp.data || resp || [];
+                var activeItems = items.filter(function(i) { return !i.isDeleted; });
+                $('#statNursingItems').text(activeItems.length);
+            });
+
+            // 待审核申请（退住+请假）
+            var pending = 0;
+            $.get('/api/check-out-applications', function(resp) {
+                var list = resp.data || resp || [];
+                pending += list.filter(function(a) { return a.status === '已提交'; }).length;
+            });
+            $.get('/api/leave-applications', function(resp) {
+                var list = resp.data || resp || [];
+                pending += list.filter(function(a) { return a.status === '已提交'; }).length;
+                $('#statPending').text(pending);
+            });
+        }
+        loadStats();
+    });
+    </script>
+    </th:block>
+</body>
+</html>

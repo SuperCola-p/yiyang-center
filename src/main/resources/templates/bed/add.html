@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{fragments/layout}">
+<head>
+    <title th:text="'新增床位'">新增床位</title>
+</head>
+<body>
+<th:block layout:fragment="content">
+    <!-- 页面标题 -->
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="mb-0"><i class="fas fa-bed text-primary"></i> 新增床位</h5>
+        <a href="/page/beds" class="btn btn-outline-secondary btn-sm">
+            <i class="fas fa-arrow-left"></i> 返回列表
+        </a>
+    </div>
+
+    <!-- 表单卡片 -->
+    <div class="card">
+        <div class="card-header">
+            <i class="fas fa-plus-circle"></i> 床位信息
+        </div>
+        <div class="card-body">
+            <form id="bedForm" onsubmit="submitBed(); return false;">
+                <!-- 楼栋 -->
+                <div class="form-group">
+                    <label>楼栋 <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" id="building" placeholder="如：A栋" required>
+                    <small class="form-text text-muted">请输入楼栋名称或编号</small>
+                </div>
+
+                <!-- 房间号 -->
+                <div class="form-group">
+                    <label>房间号 <span class="text-danger">*</span></label>
+                    <input type="number" class="form-control" id="roomNo" placeholder="如：101" required>
+                </div>
+
+                <!-- 床位号 -->
+                <div class="form-group">
+                    <label>床位号 <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" id="bedNo" placeholder="如：01" required>
+                </div>
+
+                <!-- 状态 -->
+                <div class="form-group">
+                    <label>状态</label>
+                    <select class="form-control" id="bedStatus">
+                        <option value="1" selected>空闲</option>
+                        <option value="2">已入住</option>
+                        <option value="3">维修</option>
+                    </select>
+                    <small class="form-text text-muted">新床位默认为"空闲"状态</small>
+                </div>
+
+                <!-- 备注 -->
+                <div class="form-group">
+                    <label>备注</label>
+                    <textarea class="form-control" id="remarks" rows="3" placeholder="备注信息（选填）"></textarea>
+                </div>
+
+                <!-- 提交按钮 -->
+                <div class="border-top pt-3">
+                    <button type="submit" class="btn btn-primary" id="submitBtn">
+                        <i class="fas fa-save"></i> 保存床位
+                    </button>
+                    <a href="/page/beds" class="btn btn-outline-secondary ml-2">
+                        <i class="fas fa-times"></i> 取消
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</th:block>
+
+<th:block layout:fragment="script-extra">
+    <script>
+        function submitBed() {
+            var data = {
+                building: $('#building').val().trim(),
+                roomNo: parseInt($('#roomNo').val()),
+                bedNo: $('#bedNo').val().trim(),
+                bedStatus: parseInt($('#bedStatus').val()),
+                remarks: $('#remarks').val().trim()
+            };
+
+            // 前端校验
+            if (!data.building) {
+                showToast('请输入楼栋', 'warning');
+                $('#building').focus();
+                return;
+            }
+            if (!data.roomNo) {
+                showToast('请输入房间号', 'warning');
+                $('#roomNo').focus();
+                return;
+            }
+            if (!data.bedNo) {
+                showToast('请输入床位号', 'warning');
+                $('#bedNo').focus();
+                return;
+            }
+
+            // 禁用按钮防止重复提交
+            $('#submitBtn').prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> 提交中...');
+
+            $.ajax({
+                url: '/api/beds',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(data),
+                success: function(res) {
+                    if (res.code === 200) {
+                        showToast('添加床位成功', 'success');
+                        // 成功后跳转到列表页
+                        setTimeout(function() {
+                            window.location.href = '/page/beds';
+                        }, 500);
+                    } else {
+                        showToast(res.message || '添加失败', 'error');
+                        $('#submitBtn').prop('disabled', false).html('<i class="fas fa-save"></i> 保存床位');
+                    }
+                },
+                error: function(xhr) {
+                    var msg = '网络异常，添加失败';
+                    if (xhr.responseJSON && xhr.responseJSON.message) {
+                        msg = xhr.responseJSON.message;
+                    }
+                    showToast(msg, 'error');
+                    $('#submitBtn').prop('disabled', false).html('<i class="fas fa-save"></i> 保存床位');
+                }
+            });
+        }
+    </script>
+</th:block>
+</body>
+</html>

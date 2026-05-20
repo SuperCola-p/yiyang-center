@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{fragments/layout}">
+<head>
+    <title th:text="'老人列表'">老人列表</title>
+    <th:block layout:fragment="head-extra">
+        <!-- DataTables -->
+        <link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/dataTables.bootstrap4.min.css">
+    </th:block>
+</head>
+<body>
+    <th:block layout:fragment="content">
+        <h4 class="mb-4"><i class="fas fa-users"></i> 老人列表</h4>
+
+        <!-- 搜索栏 -->
+        <div class="search-bar">
+            <form id="searchForm" class="form-inline">
+                <div class="form-group mr-3">
+                    <label class="mr-2"><i class="fas fa-user"></i> 姓名：</label>
+                    <input type="text" class="form-control form-control-sm" id="searchName" placeholder="输入姓名">
+                </div>
+                <div class="form-group mr-3">
+                    <label class="mr-2"><i class="fas fa-building"></i> 楼栋号：</label>
+                    <input type="text" class="form-control form-control-sm" id="searchBuildingNo" placeholder="输入楼栋号">
+                </div>
+                <button type="submit" class="btn btn-primary btn-sm mr-2">
+                    <i class="fas fa-search"></i> 搜索
+                </button>
+                <button type="button" class="btn btn-secondary btn-sm" onclick="resetSearch()">
+                    <i class="fas fa-undo"></i> 重置
+                </button>
+            </form>
+        </div>
+
+        <!-- 工具栏 -->
+        <div class="mb-3">
+            <a href="/page/clients/add" class="btn btn-success btn-sm">
+                <i class="fas fa-plus"></i> 新增老人
+            </a>
+        </div>
+
+        <!-- 表格 -->
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-list"></i> 老人信息列表
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table id="clientTable" class="table table-hover table-bordered" style="width:100%">
+                        <thead>
+                            <tr>
+                                <th>姓名</th>
+                                <th>年龄</th>
+                                <th>性别</th>
+                                <th>联系电话</th>
+                                <th>楼栋-房间-床位</th>
+                                <th>护理等级</th>
+                                <th>护工</th>
+                                <th>类型</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </th:block>
+
+    <!-- 分配护理等级模态框 -->
+    <div class="modal fade" id="nursingLevelModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="fas fa-layer-group"></i> 分配护理等级</h5>
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="nursingLevelClientId">
+                    <div class="form-group">
+                        <label>护理等级 <span class="text-danger">*</span></label>
+                        <select class="form-control" id="nursingLevelSelect">
+                            <option value="">请选择护理等级</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-primary" onclick="submitNursingLevel()">确定</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 护理服务查看模态框 -->
+    <div class="modal fade" id="nursingServiceModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="fas fa-notes-medical"></i> 护理服务记录</h5>
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-hover">
+                            <thead>
+                                <tr>
+                                    <th>服务名称</th>
+                                    <th>购买日期</th>
+                                    <th>总次数</th>
+                                    <th>剩余次数</th>
+                                    <th>到期日期</th>
+                                    <th>服务状态</th>
+                                </tr>
+                            </thead>
+                            <tbody id="nursingServiceBody">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">关闭</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <th:block layout:fragment="script-extra">
+    <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.4/js/dataTables.bootstrap4.min.js"></script>
+    <script>
+    var clientTable;
+
+    $(function() {
+        // 加载护理等级选项
+        loadNursingLevels();
+
+        // 初始化 DataTable
+        clientTable = $('#clientTable').DataTable({
+            processing: true,
+            serverSide: false,
+            ajax: {
+                url: '/api/clients',
+                type: 'GET',
+                dataSrc: function(resp) {
+                    return resp.data || resp || [];
+                }
+            },
+            columns: [
+                { data: 'name' },
+                { data: 'age' },
+                { data: 'gender' },
+                { data: 'phone' },
+                {
+                    data: null,
+                    render: function(row) {
+                        return (row.buildingNo || '') + '-' + (row.roomNo || '') + '-' + (row.bedNo || '');
+                    }
+                },
+                { data: 'nursingLevel' },
+                { data: 'nurse' },
+                { data: 'type' },
+                {
+                    data: null,
+                    orderable: false,
+                    render: function(row) {
+                        var html = '<a href="/page/clients/edit?id=' + row.id + '" class="btn btn-info btn-sm btn-action" title="编辑"><i class="fas fa-edit"></i> 编辑</a>';
+                        html += '<button class="btn btn-warning btn-sm btn-action" onclick="showNursingLevelModal(' + row.id + ')" title="分配护理等级"><i class="fas fa-layer-group"></i> 护理等级</button>';
+                        html += '<button class="btn btn-primary btn-sm btn-action" onclick="showNursingService(' + row.id + ')" title="查看护理服务"><i class="fas fa-notes-medical"></i> 护理服务</button>';
+                        html += '<button class="btn btn-danger btn-sm btn-action" onclick="deleteClient(' + row.id + ')" title="删除"><i class="fas fa-trash"></i> 删除</button>';
+                        return html;
+                    }
+                }
+            ],
+            language: {
+                url: '//cdn.datatables.net/plug-ins/1.13.4/i18n/zh-CN.json'
+            },
+            order: [[0, 'asc']]
+        });
+
+        // 搜索表单提交
+        $('#searchForm').submit(function(e) {
+            e.preventDefault();
+            refreshTable();
+        });
+    });
+
+    // 刷新表格
+    function refreshTable() {
+        var name = $('#searchName').val();
+        var buildingNo = $('#searchBuildingNo').val();
+        var url = '/api/clients';
+        var params = [];
+        if (name) params.push('name=' + encodeURIComponent(name));
+        if (buildingNo) params.push('buildingNo=' + encodeURIComponent(buildingNo));
+        if (params.length > 0) url += '?' + params.join('&');
+
+        clientTable.ajax.url(url).load();
+    }
+
+    // 重置搜索
+    function resetSearch() {
+        $('#searchName').val('');
+        $('#searchBuildingNo').val('');
+        clientTable.ajax.url('/api/clients').load();
+    }
+
+    // 加载护理等级
+    function loadNursingLevels() {
+        $.get('/api/nursing-levels', function(resp) {
+            var list = resp.data || resp || [];
+            var sel = $('#nursingLevelSelect');
+            sel.empty().append('<option value="">请选择护理等级</option>');
+            $.each(list, function(i, item) {
+                sel.append('<option value="' + (item.id || item.levelId) + '">' + (item.levelName || item.name || item.nursingLevelName) + '</option>');
+            });
+        });
+    }
+
+    // 显示分配护理等级弹窗
+    function showNursingLevelModal(clientId) {
+        $('#nursingLevelClientId').val(clientId);
+        $('#nursingLevelSelect').val('');
+        $('#nursingLevelModal').modal('show');
+    }
+
+    // 提交护理等级分配
+    function submitNursingLevel() {
+        var clientId = $('#nursingLevelClientId').val();
+        var nursingLevelId = $('#nursingLevelSelect').val();
+        if (!nursingLevelId) {
+            alert('请选择护理等级');
+            return;
+        }
+        $.ajax({
+            url: '/api/clients/assign-level',
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({ clientId: parseInt(clientId), nursingLevelId: parseInt(nursingLevelId) }),
+            success: function(resp) {
+                if (resp.code === 200 || resp.success) {
+                    alert('护理等级分配成功');
+                    $('#nursingLevelModal').modal('hide');
+                    refreshTable();
+                } else {
+                    alert(resp.message || '分配失败');
+                }
+            },
+            error: function() {
+                alert('请求失败，请重试');
+            }
+        });
+    }
+
+    // 查看护理服务
+    function showNursingService(clientId) {
+        $('#nursingServiceBody').empty();
+        $('#nursingServiceModal').modal('show');
+        $.get('/api/client-nursing-settings/client/' + clientId, function(resp) {
+            var list = resp.data || resp || [];
+            var tbody = $('#nursingServiceBody');
+            if (list.length === 0) {
+                tbody.html('<tr><td colspan="6" class="text-center text-muted">暂无护理服务记录</td></tr>');
+                return;
+            }
+            $.each(list, function(i, item) {
+                var statusBadge = '';
+                var status = item.serviceStatus;
+                if (status === 'ACTIVE') statusBadge = '<span class="badge badge-success">正常</span>';
+                else if (status === 'EXPIRED') statusBadge = '<span class="badge badge-danger">已过期</span>';
+                else if (status === 'SUSPENDED') statusBadge = '<span class="badge badge-warning">已暂停</span>';
+                else statusBadge = '<span class="badge badge-secondary">' + (status || '未知') + '</span>';
+
+                tbody.append('<tr>' +
+                    '<td>' + (item.nursingItemName || '-') + '</td>' +
+                    '<td>' + (item.purchaseDate || '-') + '</td>' +
+                    '<td>' + (item.totalQuantity || 0) + '</td>' +
+                    '<td>' + (item.remainingQuantity || 0) + '</td>' +
+                    '<td>' + (item.serviceDueDate || '-') + '</td>' +
+                    '<td>' + statusBadge + '</td>' +
+                    '</tr>');
+            });
+        }).fail(function() {
+            $('#nursingServiceBody').html('<tr><td colspan="6" class="text-center text-danger">加载失败</td></tr>');
+        });
+    }
+
+    // 删除老人
+    function deleteClient(id) {
+        if (!confirm('确定要删除该老人信息吗？')) return;
+        $.ajax({
+            url: '/api/clients/' + id,
+            type: 'DELETE',
+            success: function(resp) {
+                if (resp.code === 200 || resp.success) {
+                    alert('删除成功');
+                    refreshTable();
+                } else {
+                    alert(resp.message || '删除失败');
+                }
+            },
+            error: function() {
+                alert('请求失败，请重试');
+            }
+        });
+    }
+    </script>
+    </th:block>
+</body>
+</html>

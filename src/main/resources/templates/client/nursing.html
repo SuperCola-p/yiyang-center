@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{fragments/layout}">
+<head>
+    <title th:text="'护理服务设置'">护理服务设置</title>
+</head>
+<body>
+    <th:block layout:fragment="content">
+        <h4 class="mb-4"><i class="fas fa-notes-medical"></i> 老人护理服务设置</h4>
+
+        <!-- 老人选择 -->
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-user"></i> 选择老人
+            </div>
+            <div class="card-body">
+                <div class="form-inline">
+                    <div class="form-group mr-3">
+                        <label class="mr-2"><i class="fas fa-user"></i> 选择老人：</label>
+                        <select class="form-control" id="clientSelect" style="min-width:250px">
+                            <option value="">-- 请选择老人 --</option>
+                        </select>
+                    </div>
+                    <button type="button" class="btn btn-info btn-sm" onclick="loadNursingServices()">
+                        <i class="fas fa-search"></i> 查询服务
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 护理服务列表 -->
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span><i class="fas fa-list"></i> 护理服务记录</span>
+                <div>
+                    <button type="button" class="btn btn-primary btn-sm" onclick="showPurchaseModal()">
+                        <i class="fas fa-cart-plus"></i> 购买护理服务
+                    </button>
+                    <button type="button" class="btn btn-info btn-sm" onclick="checkExpiry()">
+                        <i class="fas fa-clock"></i> 检查到期
+                    </button>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover table-bordered" id="nursingTable">
+                        <thead>
+                            <tr>
+                                <th>服务名称</th>
+                                <th>购买日期</th>
+                                <th>总次数</th>
+                                <th>剩余次数</th>
+                                <th>到期日期</th>
+                                <th>服务状态</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="nursingServiceList">
+                            <tr><td colspan="7" class="text-center text-muted">请先选择老人并点击查询</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </th:block>
+
+    <!-- 购买护理服务模态框 -->
+    <div class="modal fade" id="purchaseModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="fas fa-cart-plus"></i> 购买护理服务</h5>
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label>护理项目 <span class="text-danger">*</span></label>
+                        <select class="form-control" id="purchaseItem">
+                            <option value="">请选择护理项目</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>护理等级 <span class="text-danger">*</span></label>
+                        <select class="form-control" id="purchaseLevel">
+                            <option value="">请选择护理等级</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>总次数 <span class="text-danger">*</span></label>
+                        <input type="number" class="form-control" id="purchaseTotalQuantity" min="1" value="1">
+                    </div>
+                    <div class="form-group">
+                        <label>服务到期日期 <span class="text-danger">*</span></label>
+                        <input type="date" class="form-control" id="purchaseDueDate">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-primary" onclick="submitPurchase()">确认购买</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 消费扣次模态框 -->
+    <div class="modal fade" id="consumeModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="fas fa-minus-circle"></i> 消费扣次</h5>
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="consumeSettingId">
+                    <div class="form-group">
+                        <label>消费数量 <span class="text-danger">*</span></label>
+                        <input type="number" class="form-control" id="consumeQuantity" min="1" value="1">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-info" onclick="submitConsume()">确认扣次</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 续费模态框 -->
+    <div class="modal fade" id="renewModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="fas fa-redo"></i> 续费</h5>
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="renewSettingId">
+                    <div class="form-group">
+                        <label>新增次数 <span class="text-danger">*</span></label>
+                        <input type="number" class="form-control" id="renewQuantity" min="1" value="1">
+                    </div>
+                    <div class="form-group">
+                        <label>新的到期日期</label>
+                        <input type="date" class="form-control" id="renewDueDate">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-success" onclick="submitRenew()">确认续费</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <th:block layout:fragment="script-extra">
+    <script>
+    var currentClientId = null;
+
+    $(function() {
+        // 加载老人列表
+        loadClients();
+        // 加载护理项目和护理等级下拉选项
+        loadNursingItems();
+        loadNursingLevelsForPurchase();
+    });
+
+    // 加载老人下拉
+    function loadClients() {
+        $.get('/api/clients', function(resp) {
+            var list = resp.data || resp || [];
+            var sel = $('#clientSelect');
+            sel.empty().append('<option value="">-- 请选择老人 --</option>');
+            $.each(list, function(i, item) {
+                sel.append('<option value="' + item.id + '">' + item.name + ' (' + (item.buildingNo || '') + '-' + (item.roomNo || '') + '-' + (item.bedNo || '') + ')</option>');
+            });
+        });
+    }
+
+    // 加载护理项目
+    function loadNursingItems() {
+        $.get('/api/nursing-items', function(resp) {
+            var list = resp.data || resp || [];
+            var sel = $('#purchaseItem');
+            sel.empty().append('<option value="">请选择护理项目</option>');
+            $.each(list, function(i, item) {
+                sel.append('<option value="' + item.id + '">' + item.name + '</option>');
+            });
+        });
+    }
+
+    // 加载护理等级（购买弹窗用）
+    function loadNursingLevelsForPurchase() {
+        $.get('/api/nursing-levels', function(resp) {
+            var list = resp.data || resp || [];
+            var sel = $('#purchaseLevel');
+            sel.empty().append('<option value="">请选择护理等级</option>');
+            $.each(list, function(i, item) {
+                sel.append('<option value="' + item.id + '">' + (item.name || item.nursingLevelName) + '</option>');
+            });
+        });
+    }
+
+    // 加载某老人的护理服务
+    function loadNursingServices() {
+        var clientId = $('#clientSelect').val();
+        if (!clientId) {
+            alert('请先选择老人');
+            return;
+        }
+        currentClientId = clientId;
+        var tbody = $('#nursingServiceList');
+        tbody.html('<tr><td colspan="7" class="text-center"><i class="fas fa-spinner fa-spin"></i> 加载中...</td></tr>');
+
+        $.get('/api/client-nursing-settings/client/' + clientId, function(resp) {
+            var list = resp.data || resp || [];
+            tbody.empty();
+            if (list.length === 0) {
+                tbody.html('<tr><td colspan="7" class="text-center text-muted">暂无护理服务记录</td></tr>');
+                return;
+            }
+            $.each(list, function(i, item) {
+                var statusBadge = '';
+                var status = item.serviceStatus;
+                if (status === 'ACTIVE') statusBadge = '<span class="badge badge-success">正常</span>';
+                else if (status === 'EXPIRED') statusBadge = '<span class="badge badge-danger">已过期</span>';
+                else if (status === 'SUSPENDED') statusBadge = '<span class="badge badge-warning">已暂停</span>';
+                else statusBadge = '<span class="badge badge-secondary">' + (status || '未知') + '</span>';
+
+                tbody.append('<tr>' +
+                    '<td>' + (item.nursingItemName || '-') + '</td>' +
+                    '<td>' + (item.purchaseDate || '-') + '</td>' +
+                    '<td>' + (item.totalQuantity || 0) + '</td>' +
+                    '<td>' + (item.remainingQuantity || 0) + '</td>' +
+                    '<td>' + (item.serviceDueDate || '-') + '</td>' +
+                    '<td>' + statusBadge + '</td>' +
+                    '<td>' +
+                        '<button class="btn btn-info btn-sm btn-action" onclick="showConsumeModal(' + item.id + ')" title="消费扣次"><i class="fas fa-minus-circle"></i> 扣次</button>' +
+                        '<button class="btn btn-success btn-sm btn-action" onclick="showRenewModal(' + item.id + ')" title="续费"><i class="fas fa-redo"></i> 续费</button>' +
+                    '</td></tr>');
+            });
+        }).fail(function() {
+            tbody.html('<tr><td colspan="7" class="text-center text-danger">加载失败</td></tr>');
+        });
+    }
+
+    // 显示购买弹窗
+    function showPurchaseModal() {
+        if (!currentClientId && !$('#clientSelect').val()) {
+            alert('请先选择老人');
+            return;
+        }
+        if (!currentClientId) currentClientId = $('#clientSelect').val();
+        $('#purchaseItem').val('');
+        $('#purchaseLevel').val('');
+        $('#purchaseTotalQuantity').val(1);
+        $('#purchaseDueDate').val('');
+        $('#purchaseModal').modal('show');
+    }
+
+    // 提交购买
+    function submitPurchase() {
+        var clientId = currentClientId || $('#clientSelect').val();
+        if (!clientId) { alert('请先选择老人'); return; }
+        var nursingItemId = $('#purchaseItem').val();
+        var nursingLevelId = $('#purchaseLevel').val();
+        var totalQuantity = parseInt($('#purchaseTotalQuantity').val());
+        var serviceDueDate = $('#purchaseDueDate').val();
+
+        if (!nursingItemId) { alert('请选择护理项目'); return; }
+        if (!nursingLevelId) { alert('请选择护理等级'); return; }
+        if (!totalQuantity || totalQuantity < 1) { alert('请输入有效的总次数'); return; }
+        if (!serviceDueDate) { alert('请选择服务到期日期'); return; }
+
+        var data = {
+            clientId: clientId,
+            nursingItemId: nursingItemId,
+            nursingLevelId: nursingLevelId,
+            totalQuantity: totalQuantity,
+            serviceDueDate: serviceDueDate
+        };
+
+        $.ajax({
+            url: '/api/client-nursing-settings',
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify(data),
+            success: function(resp) {
+                if (resp.code === 200 || resp.success) {
+                    alert('购买成功');
+                    $('#purchaseModal').modal('hide');
+                    loadNursingServices();
+                } else {
+                    alert(resp.message || '购买失败');
+                }
+            },
+            error: function() {
+                alert('请求失败，请重试');
+            }
+        });
+    }
+
+    // 显示消费扣次弹窗
+    function showConsumeModal(settingId) {
+        $('#consumeSettingId').val(settingId);
+        $('#consumeQuantity').val(1);
+        $('#consumeModal').modal('show');
+    }
+
+    // 提交消费扣次
+    function submitConsume() {
+        var settingId = $('#consumeSettingId').val();
+        var quantity = parseInt($('#consumeQuantity').val());
+
+        if (!quantity || quantity < 1) { alert('请输入有效的消费数量'); return; }
+
+        $.ajax({
+            url: '/api/client-nursing-settings/consume',
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({ id: settingId, quantity: quantity }),
+            success: function(resp) {
+                if (resp.code === 200 || resp.success) {
+                    alert('扣次成功');
+                    $('#consumeModal').modal('hide');
+                    loadNursingServices();
+                } else {
+                    alert(resp.message || '扣次失败');
+                }
+            },
+            error: function() {
+                alert('请求失败，请重试');
+            }
+        });
+    }
+
+    // 显示续费弹窗
+    function showRenewModal(settingId) {
+        $('#renewSettingId').val(settingId);
+        $('#renewQuantity').val(1);
+        $('#renewDueDate').val('');
+        $('#renewModal').modal('show');
+    }
+
+    // 提交续费
+    function submitRenew() {
+        var settingId = $('#renewSettingId').val();
+        var quantity = parseInt($('#renewQuantity').val());
+        var dueDate = $('#renewDueDate').val();
+
+        if (!quantity || quantity < 1) { alert('请输入有效的新增次数'); return; }
+
+        var data = { id: settingId, quantity: quantity };
+        if (dueDate) data.serviceDueDate = dueDate;
+
+        $.ajax({
+            url: '/api/client-nursing-settings/renew',
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify(data),
+            success: function(resp) {
+                if (resp.code === 200 || resp.success) {
+                    alert('续费成功');
+                    $('#renewModal').modal('hide');
+                    loadNursingServices();
+                } else {
+                    alert(resp.message || '续费失败');
+                }
+            },
+            error: function() {
+                alert('请求失败，请重试');
+            }
+        });
+    }
+
+    // 检查到期
+    function checkExpiry() {
+        if (!confirm('确定要检查所有护理服务的到期状态吗？')) return;
+        $.ajax({
+            url: '/api/client-nursing-settings/check-expiry',
+            type: 'POST',
+            success: function(resp) {
+                if (resp.code === 200 || resp.success) {
+                    alert('到期检查完成');
+                    if (currentClientId || $('#clientSelect').val()) {
+                        loadNursingServices();
+                    }
+                } else {
+                    alert(resp.message || '检查失败');
+                }
+            },
+            error: function() {
+                alert('请求失败，请重试');
+            }
+        });
+    }
+    </script>
+    </th:block>
+</body>
+</html>

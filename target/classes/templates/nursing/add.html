@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{fragments/layout}">
+<head>
+    <title th:text="'新增护理项目'">新增护理项目</title>
+</head>
+<body>
+    <th:block layout:fragment="content">
+        <h4 class="mb-4"><i class="fas fa-plus-circle"></i> 新增护理项目</h4>
+
+        <div class="card">
+            <div class="card-body">
+                <form id="addForm">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>项目编码 <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="code" name="code" required placeholder="请输入项目编码">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>项目名称 <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="name" name="name" required placeholder="请输入项目名称">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>价格(元) <span class="text-danger">*</span></label>
+                                <input type="number" class="form-control" id="price" name="price" required step="0.01" min="0" placeholder="请输入价格">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>状态 <span class="text-danger">*</span></label>
+                                <select class="form-control" id="status" name="status">
+                                    <option value="ENABLED">启用</option>
+                                    <option value="DISABLED">禁用</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>执行周期 <span class="text-danger">*</span></label>
+                                <select class="form-control" id="execPeriod" name="execPeriod">
+                                    <option value="DAILY">每日</option>
+                                    <option value="WEEKLY">每周</option>
+                                    <option value="MONTHLY">每月</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>执行次数 <span class="text-danger">*</span></label>
+                                <input type="number" class="form-control" id="execQuantity" name="execQuantity" required min="1" placeholder="请输入执行次数">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>项目描述</label>
+                        <textarea class="form-control" id="description" name="description" rows="3" placeholder="请输入项目描述"></textarea>
+                    </div>
+
+                    <div class="form-group text-center">
+                        <button type="submit" class="btn btn-primary" id="submitBtn">
+                            <i class="fas fa-save"></i> 保存
+                        </button>
+                        <a href="/page/nursing-items" class="btn btn-secondary ml-2">
+                            <i class="fas fa-arrow-left"></i> 返回列表
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </th:block>
+
+    <th:block layout:fragment="script-extra">
+    <script>
+        $('#addForm').submit(function(e) {
+            e.preventDefault();
+            var btn = $('#submitBtn');
+            btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> 提交中...');
+
+            var data = {
+                code: $('#code').val().trim(),
+                name: $('#name').val().trim(),
+                price: parseFloat($('#price').val()) || 0,
+                status: $('#status').val(),
+                execPeriod: $('#execPeriod').val(),
+                execQuantity: parseInt($('#execQuantity').val()) || 0,
+                description: $('#description').val().trim()
+            };
+
+            $.ajax({
+                url: '/api/nursing-items',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(data),
+                success: function(resp) {
+                    if (resp && resp.success === false) {
+                        alert(resp.message || '新增失败');
+                        btn.prop('disabled', false).html('<i class="fas fa-save"></i> 保存');
+                    } else {
+                        alert('新增成功！');
+                        window.location.href = '/page/nursing-items';
+                    }
+                },
+                error: function(xhr) {
+                    try {
+                        var resp = JSON.parse(xhr.responseText);
+                        alert(resp.message || '新增失败');
+                    } catch(e) {
+                        alert('网络错误，请重试');
+                    }
+                    btn.prop('disabled', false).html('<i class="fas fa-save"></i> 保存');
+                }
+            });
+        });
+    </script>
+    </th:block>
+</body>
+</html>

@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{fragments/layout}">
+<head>
+    <title th:text="'新增退住申请'">新增退住申请</title>
+</head>
+<body>
+    <th:block layout:fragment="content">
+        <h4 class="mb-4"><i class="fas fa-plus-circle"></i> 新增退住申请</h4>
+
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-header">
+                        <i class="fas fa-sign-out-alt"></i> 退住申请信息
+                    </div>
+                    <div class="card-body">
+                        <form id="addForm">
+                            <div class="form-group">
+                                <label><span class="text-danger">*</span> 老人</label>
+                                <select class="form-control" id="clientId" required>
+                                    <option value="">请选择老人</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>老人姓名</label>
+                                <input type="text" class="form-control" id="clientName" readonly placeholder="选择老人后自动填充">
+                            </div>
+                            <div class="form-group">
+                                <label><span class="text-danger">*</span> 退住类型</label>
+                                <select class="form-control" id="type" required>
+                                    <option value="">请选择退住类型</option>
+                                    <option value="VOLUNTARY">主动退住</option>
+                                    <option value="FORCED">违规劝退</option>
+                                    <option value="TRANSFER">转院</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label><span class="text-danger">*</span> 退住原因</label>
+                                <textarea class="form-control" id="reason" rows="3" placeholder="请输入退住原因" required></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label><span class="text-danger">*</span> 申请时间</label>
+                                <input type="datetime-local" class="form-control" id="time" required>
+                            </div>
+                            <div class="form-group text-right">
+                                <a th:href="@{/page/check-out-applications}" class="btn btn-secondary">
+                                    <i class="fas fa-arrow-left"></i> 返回
+                                </a>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-save"></i> 提交
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </th:block>
+
+    <th:block layout:fragment="script-extra">
+    <script>
+    $(function() {
+        // 加载老人下拉
+        $.get('/api/clients', function(resp) {
+            var clients = resp.data || resp || [];
+            var sel = $('#clientId');
+            clients.forEach(function(c) {
+                if (!c.deleted) {
+                    sel.append('<option value="' + c.id + '">' + c.name + '</option>');
+                }
+            });
+        });
+
+        // 选择老人后自动填充姓名
+        $('#clientId').change(function() {
+            var id = $(this).val();
+            if (id) {
+                $.get('/api/clients/' + id, function(resp) {
+                    var client = resp.data || resp;
+                    if (client) {
+                        $('#clientName').val(client.name);
+                    }
+                });
+            } else {
+                $('#clientName').val('');
+            }
+        });
+
+        // 提交表单
+        $('#addForm').submit(function(e) {
+            e.preventDefault();
+            var data = {
+                clientId: parseInt($('#clientId').val()),
+                clientName: $('#clientName').val(),
+                type: $('#type').val(),
+                reason: $('#reason').val().trim(),
+                time: $('#time').val()
+            };
+
+            if (!data.clientId || !data.type || !data.reason || !data.time) {
+                showToast('请填写完整信息', 'warning');
+                return;
+            }
+
+            $.ajax({
+                url: '/api/check-out-applications',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(data),
+                success: function(resp) {
+                    if (resp.code === 200 || resp.success) {
+                        showToast('提交成功', 'success');
+                        setTimeout(function() {
+                            window.location.href = '/page/check-out-applications';
+                        }, 1000);
+                    } else {
+                        showToast(resp.message || '提交失败', 'danger');
+                    }
+                },
+                error: function() {
+                    showToast('提交失败，请稍后重试', 'danger');
+                }
+            });
+        });
+    });
+    </script>
+    </th:block>
+</body>
+</html>

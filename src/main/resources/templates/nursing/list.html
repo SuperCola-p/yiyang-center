@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{fragments/layout}">
+<head>
+    <title th:text="'护理项目管理'">护理项目管理</title>
+</head>
+<body>
+    <th:block layout:fragment="content">
+        <h4 class="mb-4"><i class="fas fa-notes-medical"></i> 护理项目管理</h4>
+
+        <!-- 搜索 + 新增 -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="input-group">
+                            <input type="text" class="form-control" id="searchName" placeholder="按项目名称搜索...">
+                            <div class="input-group-append">
+                                <button class="btn btn-primary" onclick="loadData()">
+                                    <i class="fas fa-search"></i> 搜索
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 text-right">
+                        <a href="/page/nursing-items/add" class="btn btn-success">
+                            <i class="fas fa-plus"></i> 新增护理项目
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 表格 -->
+        <div class="card">
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-bordered table-hover" id="dataTable">
+                        <thead class="thead-light">
+                            <tr>
+                                <th>项目编码</th>
+                                <th>项目名称</th>
+                                <th>价格(元)</th>
+                                <th>状态</th>
+                                <th>执行周期</th>
+                                <th>执行次数</th>
+                                <th>项目描述</th>
+                                <th style="width: 180px;">操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tableBody">
+                            <tr id="loadingRow">
+                                <td colspan="8" class="text-center text-muted">
+                                    <i class="fas fa-spinner fa-spin"></i> 加载中...
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- 删除确认弹窗 -->
+        <div class="modal fade" id="deleteModal" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">确认删除</h5>
+                        <button type="button" class="close" data-dismiss="modal">&times;</button>
+                    </div>
+                    <div class="modal-body">
+                        <p>确定要删除护理项目 <strong id="deleteItemName"></strong> 吗？</p>
+                        <p class="text-danger"><small>此操作为逻辑删除，可恢复。</small></p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">取消</button>
+                        <button type="button" class="btn btn-danger" id="confirmDeleteBtn">确认删除</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </th:block>
+
+    <th:block layout:fragment="script-extra">
+    <script>
+        var deleteId = null;
+
+        $(function() {
+            loadData();
+        });
+
+        function loadData() {
+            var name = $('#searchName').val().trim();
+            var url = '/api/nursing-items';
+            if (name) {
+                url += '?name=' + encodeURIComponent(name);
+            }
+            $('#tableBody').html('<tr><td colspan="8" class="text-center text-muted"><i class="fas fa-spinner fa-spin"></i> 加载中...</td></tr>');
+            $.get(url, function(resp) {
+                var items = resp.data || resp || [];
+                renderTable(items);
+            }).fail(function() {
+                $('#tableBody').html('<tr><td colspan="8" class="text-center text-danger">加载失败，请刷新重试</td></tr>');
+            });
+        }
+
+        function renderTable(items) {
+            if (!items || items.length === 0) {
+                $('#tableBody').html('<tr><td colspan="8" class="text-center text-muted">暂无数据</td></tr>');
+                return;
+            }
+            var html = '';
+            items.forEach(function(item) {
+                var statusLabel, statusClass;
+                if (item.status === 'ENABLED') {
+                    statusLabel = '启用';
+                    statusClass = 'badge-success';
+                } else {
+                    statusLabel = '禁用';
+                    statusClass = 'badge-secondary';
+                }
+
+                var periodMap = {
+                    'DAILY': '每日',
+                    'WEEKLY': '每周',
+                    'MONTHLY': '每月'
+                };
+                var periodLabel = periodMap[item.execPeriod] || item.execPeriod || '-';
+
+                html += '<tr>' +
+                    '<td>' + (item.code || '-') + '</td>' +
+                    '<td>' + (item.name || '-') + '</td>' +
+                    '<td>' + (item.price != null ? item.price : '-') + '</td>' +
+                    '<td><span class="badge ' + statusClass + '">' + statusLabel + '</span></td>' +
+                    '<td>' + periodLabel + '</td>' +
+                    '<td>' + (item.execQuantity != null ? item.execQuantity : '-') + '</td>' +
+                    '<td>' + (item.description || '-') + '</td>' +
+                    '<td class="text-nowrap">' +
+                        '<a href="/page/nursing-items/edit?id=' + item.id + '" class="btn btn-sm btn-info mr-1" title="编辑"><i class="fas fa-edit"></i></a>' +
+                        '<button class="btn btn-sm ' + (item.status === 'ENABLED' ? 'btn-warning' : 'btn-success') + ' mr-1" onclick="toggleStatus(' + item.id + ', \'' + item.status + '\')" title="' + (item.status === 'ENABLED' ? '禁用' : '启用') + '">' +
+                            '<i class="fas ' + (item.status === 'ENABLED' ? 'fa-toggle-on' : 'fa-toggle-off') + '"></i>' +
+                        '</button>' +
+                        '<button class="btn btn-sm btn-danger" onclick="showDeleteModal(' + item.id + ', \'' + item.name.replace(/'/g, "\\'") + '\')" title="删除"><i class="fas fa-trash"></i></button>' +
+                    '</td>' +
+                '</tr>';
+            });
+            $('#tableBody').html(html);
+        }
+
+        function toggleStatus(id, currentStatus) {
+            var newStatus = currentStatus === 'ENABLED' ? 'DISABLED' : 'ENABLED';
+            var actionLabel = newStatus === 'ENABLED' ? '启用' : '禁用';
+            if (!confirm('确定要' + actionLabel + '该护理项目吗？')) return;
+
+            $.ajax({
+                url: '/api/nursing-items/' + id + '/status',
+                type: 'PUT',
+                contentType: 'application/json',
+                data: JSON.stringify({ status: newStatus }),
+                success: function(resp) {
+                    if (resp && resp.success === false) {
+                        alert(resp.message || '操作失败');
+                    } else {
+                        loadData();
+                    }
+                },
+                error: function(xhr) {
+                    try {
+                        var resp = JSON.parse(xhr.responseText);
+                        alert(resp.message || '操作失败');
+                    } catch(e) {
+                        alert('网络错误，请重试');
+                    }
+                }
+            });
+        }
+
+        function showDeleteModal(id, name) {
+            deleteId = id;
+            $('#deleteItemName').text(name);
+            $('#deleteModal').modal('show');
+        }
+
+        $('#confirmDeleteBtn').click(function() {
+            if (deleteId == null) return;
+            $.ajax({
+                url: '/api/nursing-items/' + deleteId,
+                type: 'DELETE',
+                success: function(resp) {
+                    if (resp && resp.success === false) {
+                        alert(resp.message || '删除失败');
+                    } else {
+                        $('#deleteModal').modal('hide');
+                        deleteId = null;
+                        loadData();
+                    }
+                },
+                error: function(xhr) {
+                    try {
+                        var resp = JSON.parse(xhr.responseText);
+                        alert(resp.message || '删除失败');
+                    } catch(e) {
+                        alert('网络错误，请重试');
+                    }
+                }
+            });
+        });
+    </script>
+    </th:block>
+</body>
+</html>

@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{fragments/layout}">
+<head>
+    <title th:text="'编辑护理等级'">编辑护理等级</title>
+</head>
+<body>
+    <th:block layout:fragment="content">
+        <div class="mb-4">
+            <h4 class="mb-0"><i class="fas fa-edit"></i> 编辑护理等级</h4>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-layer-group"></i> 基本信息
+            </div>
+            <div class="card-body">
+                <form id="levelEditForm">
+                    <input type="hidden" id="levelId" value="">
+
+                    <div class="form-group">
+                        <label><span class="text-danger">*</span> 等级名称</label>
+                        <input type="text" class="form-control" id="levelName" placeholder="请输入护理等级名称" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label><span class="text-danger">*</span> 状态</label>
+                        <select class="form-control" id="status">
+                            <option value="ENABLED">启用</option>
+                            <option value="DISABLED">禁用</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>关联护理项目</label>
+                        <div id="itemCheckboxGroup" class="border rounded p-3 bg-light" style="max-height: 400px; overflow-y: auto;">
+                            <div class="text-center text-muted py-3" id="itemLoading">
+                                <i class="fas fa-spinner fa-spin"></i> 加载护理项目中...
+                            </div>
+                            <div id="itemCheckboxList"></div>
+                            <div class="text-center text-muted py-3 d-none" id="noItemHint">
+                                暂无可用护理项目
+                            </div>
+                        </div>
+                        <small class="form-text text-muted">勾选需要关联到该等级的护理项目</small>
+                    </div>
+
+                    <div class="form-group text-center mt-4">
+                        <button type="submit" class="btn btn-primary btn-lg px-5" id="submitBtn">
+                            <i class="fas fa-save"></i> 保存修改
+                        </button>
+                        <a href="/page/nursing-levels" class="btn btn-secondary btn-lg px-5 ml-2">
+                            <i class="fas fa-times"></i> 取消
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </th:block>
+
+    <th:block layout:fragment="script-extra">
+    <script>
+    $(function() {
+        // 获取URL中的ID参数
+        var levelId = getQueryParam('id');
+        if (!levelId) {
+            showToast('缺少等级ID参数', 'error');
+            setTimeout(function() {
+                window.location.href = '/page/nursing-levels';
+            }, 1500);
+            return;
+        }
+
+        $('#levelId').val(levelId);
+
+        // 加载所有护理项目 + 等级数据 + 已关联项目
+        loadPageData(levelId);
+
+        function loadPageData(id) {
+            $.get('/api/nursing-levels/' + id, function(resp) {
+                var level = resp.data || resp;
+                if (!level || level.deleted) {
+                    showToast('护理等级不存在或已被删除', 'error');
+                    setTimeout(function() {
+                        window.location.href = '/page/nursing-levels';
+                    }, 1500);
+                    return;
+                }
+
+                // 回显基本信息
+                $('#levelName').val(level.levelName || '');
+                $('#status').val(level.status || 'ENABLED');
+
+                // 加载所有护理项目并标记已关联的
+                loadAllItemsWithSelection(id);
+            }).fail(function(xhr) {
+                try {
+                    var resp = JSON.parse(xhr.responseText);
+                    showToast(resp.message || '加载等级信息失败', 'error');
+                } catch(e) {
+                    showToast('加载等级信息失败', 'error');
+                }
+                setTimeout(function() {
+                    window.location.href = '/page/nursing-levels';
+                }, 1500);
+            });
+        }
+
+        function loadAllItemsWithSelection(levelId) {
+            $('#itemLoading').removeClass('d-none');
+            $('#itemCheckboxList').empty();
+            $('#noItemHint').addClass('d-none');
+
+            // 并行加载所有项目和已关联项目ID
+            var itemsLoaded = false;
+            var selectedIdsLoaded = false;
+            var allItems = [];
+            var selectedIds = [];
+
+            $.get('/api/nursing-items', function(resp) {
+                allItems = resp.data || resp || [];
+                itemsLoaded = true;
+                tryRenderItems();
+            }).fail(function() {
+                $('#itemLoading').html('<span class="text-danger">加载护理项目失败</span>');
+            });
+
+            $.get('/api/nursing-levels/' + levelId + '/items', function(resp) {
+                var levelItems = resp.data || [];
+                selectedIds = levelItems.map(function(li) { return li.itemId; });
+                selectedIdsLoaded = true;
+                tryRenderItems();
+            }).fail(function() {
+                selectedIdsLoaded = true;
+                tryRenderItems();
+            });
+
+            function tryRenderItems() {
+                if (!itemsLoaded || !selectedIdsLoaded) return;
+
+                $('#itemLoading').addClass('d-none');
+
+                // 只显示启用且未删除的护理项目
+                var availableItems = allItems.filter(function(item) {
+                    return !item.isDeleted;
+                });
+
+                if (availableItems.length === 0) {
+                    $('#noItemHint').removeClass('d-none');
+                    return;
+                }
+
+                var html = '';
+                availableItems.forEach(function(item) {
+                    var checked = selectedIds.indexOf(item.id) !== -1 ? 'checked' : '';
+                    var disabled = item.status !== 'ENABLED' ? 'disabled' : '';
+                    var disabledClass = item.status !== 'ENABLED' ? 'text-muted' : '';
+
+                    html += '<div class="custom-control custom-checkbox mb-2 ' + disabledClass + '">' +
+                        '<input type="checkbox" class="custom-control-input item-checkbox" id="item_' + item.id + '" value="' + item.id + '" ' + checked + ' ' + disabled + '>' +
+                        '<label class="custom-control-label" for="item_' + item.id + '">' +
+                            escapeHtml(item.name || '') +
+                            (item.code ? ' <small class="text-muted">(' + escapeHtml(item.code) + ')</small>' : '') +
+                            (item.price ? ' <span class="badge badge-info">¥' + item.price + '</span>' : '') +
+                            (item.status !== 'ENABLED' ? ' <span class="badge badge-secondary">已禁用</span>' : '') +
+                        '</label>' +
+                        '</div>';
+                });
+                $('#itemCheckboxList').html(html);
+            }
+        }
+
+        // 提交表单
+        $('#levelEditForm').on('submit', function(e) {
+            e.preventDefault();
+
+            var id = $('#levelId').val();
+            var levelName = $('#levelName').val().trim();
+            if (!levelName) {
+                showToast('请输入等级名称', 'warning');
+                $('#levelName').focus();
+                return;
+            }
+
+            var status = $('#status').val();
+            var itemIds = [];
+            $('.item-checkbox:checked').each(function() {
+                itemIds.push(parseInt($(this).val()));
+            });
+
+            var submitBtn = $('#submitBtn');
+            submitBtn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> 保存中...');
+
+            // 1. 先更新等级基本信息
+            $.ajax({
+                url: '/api/nursing-levels/' + id,
+                type: 'PUT',
+                contentType: 'application/json',
+                data: JSON.stringify({
+                    levelName: levelName,
+                    status: status
+                }),
+                success: function(resp) {
+                    if (resp.code === 200) {
+                        // 2. 重新设置关联项目：先删除所有，再添加
+                        updateLevelItems(id, itemIds, function() {
+                            showToast('修改保存成功');
+                            setTimeout(function() {
+                                window.location.href = '/page/nursing-levels';
+                            }, 800);
+                        });
+                    } else {
+                        showToast(resp.message || '修改失败', 'error');
+                        submitBtn.prop('disabled', false).html('<i class="fas fa-save"></i> 保存修改');
+                    }
+                },
+                error: function(xhr) {
+                    try {
+                        var resp = JSON.parse(xhr.responseText);
+                        showToast(resp.message || '修改失败', 'error');
+                    } catch(e) {
+                        showToast('修改失败，请检查网络', 'error');
+                    }
+                    submitBtn.prop('disabled', false).html('<i class="fas fa-save"></i> 保存修改');
+                }
+            });
+        });
+
+        function updateLevelItems(levelId, newItemIds, callback) {
+            // 获取当前已关联项目ID列表
+            $.get('/api/nursing-levels/' + levelId + '/items', function(resp) {
+                var currentItems = resp.data || [];
+                var currentIds = currentItems.map(function(li) { return li.itemId; });
+
+                var toAdd = newItemIds.filter(function(id) { return currentIds.indexOf(id) === -1; });
+                var toRemove = currentIds.filter(function(id) { return newItemIds.indexOf(id) === -1; });
+
+                var deleteDone = false;
+                var addDone = false;
+
+                function checkDone() {
+                    if (deleteDone && addDone) {
+                        if (callback) callback();
+                    }
+                }
+
+                // 删除需要移除的
+                if (toRemove.length > 0) {
+                    $.ajax({
+                        url: '/api/nursing-levels/' + levelId + '/items',
+                        type: 'DELETE',
+                        contentType: 'application/json',
+                        data: JSON.stringify({ itemIds: toRemove }),
+                        complete: function() {
+                            deleteDone = true;
+                            checkDone();
+                        }
+                    });
+                } else {
+                    deleteDone = true;
+                }
+
+                // 添加需要新增的
+                if (toAdd.length > 0) {
+                    $.ajax({
+                        url: '/api/nursing-levels/' + levelId + '/items',
+                        type: 'POST',
+                        contentType: 'application/json',
+                        data: JSON.stringify({ itemIds: toAdd }),
+                        complete: function() {
+                            addDone = true;
+                            checkDone();
+                        }
+                    });
+                } else {
+                    addDone = true;
+                }
+
+                if (toRemove.length === 0 && toAdd.length === 0) {
+                    if (callback) callback();
+                }
+            }).fail(function() {
+                // 如果获取关联列表失败，直接尝试先删后加
+                // 先删除所有关联
+                var allRemoved = false;
+                var allAdded = false;
+
+                function finalCheck() {
+                    if (allRemoved && allAdded) {
+                        if (callback) callback();
+                    }
+                }
+
+                $.ajax({
+                    url: '/api/nursing-levels/' + levelId + '/items',
+                    type: 'DELETE',
+                    contentType: 'application/json',
+                    data: JSON.stringify({ itemIds: [0] }), // 发送一个不存在的id，不触发实际删除，fallback
+                    complete: function() {
+                        allRemoved = true;
+                        // 直接添加新关联
+                        if (newItemIds.length > 0) {
+                            $.ajax({
+                                url: '/api/nursing-levels/' + levelId + '/items',
+                                type: 'POST',
+                                contentType: 'application/json',
+                                data: JSON.stringify({ itemIds: newItemIds }),
+                                complete: function() {
+                                    allAdded = true;
+                                    finalCheck();
+                                }
+                            });
+                        } else {
+                            allAdded = true;
+                            finalCheck();
+                        }
+                    }
+                });
+            });
+        }
+
+        function getQueryParam(name) {
+            var url = new URL(window.location.href);
+            return url.searchParams.get(name);
+        }
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+        }
+    });
+    </script>
+    </th:block>
+</body>
+</html>

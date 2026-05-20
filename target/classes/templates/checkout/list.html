@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{fragments/layout}">
+<head>
+    <title th:text="'退住申请'">退住申请</title>
+</head>
+<body>
+    <th:block layout:fragment="content">
+        <h4 class="mb-4"><i class="fas fa-sign-out-alt"></i> 退住申请</h4>
+
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span><i class="fas fa-list"></i> 退住申请列表</span>
+                <a th:href="@{/page/check-out-applications/add}" class="btn btn-success btn-sm">
+                    <i class="fas fa-plus"></i> 新增申请
+                </a>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover">
+                        <thead class="thead-light">
+                            <tr>
+                                <th>#</th>
+                                <th>申请编号</th>
+                                <th>老人姓名</th>
+                                <th>类型</th>
+                                <th>申请时间</th>
+                                <th>状态</th>
+                                <th>审核人</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="checkoutTableBody">
+                            <tr id="noDataRow">
+                                <td colspan="8" class="text-center text-muted">暂无数据</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- 审核弹窗 -->
+        <div class="modal fade" id="auditModal" tabindex="-1" role="dialog">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title"><i class="fas fa-check-circle"></i> 审核退住申请</h5>
+                        <button type="button" class="close" data-dismiss="modal">&times;</button>
+                    </div>
+                    <div class="modal-body">
+                        <p class="mb-1">申请编号：<strong id="auditAppNo"></strong></p>
+                        <p>老人：<strong id="auditClientName"></strong></p>
+                        <div class="form-group">
+                            <label>审核意见</label>
+                            <textarea class="form-control" id="auditOpinion" rows="3" placeholder="请输入审核意见（可选）"></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">取消</button>
+                        <button type="button" class="btn btn-danger" id="rejectBtn">
+                            <i class="fas fa-times"></i> 拒绝
+                        </button>
+                        <button type="button" class="btn btn-success" id="approveBtn">
+                            <i class="fas fa-check"></i> 通过
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </th:block>
+
+    <th:block layout:fragment="script-extra">
+    <script>
+    $(function() {
+        var auditId = null;
+
+        // 加载列表
+        function loadList() {
+            $.get('/api/check-out-applications', function(resp) {
+                var list = resp.data || resp || [];
+                var tbody = $('#checkoutTableBody');
+                tbody.empty();
+                if (list.length === 0) {
+                    tbody.append('<tr><td colspan="8" class="text-center text-muted">暂无数据</td></tr>');
+                    return;
+                }
+                list.forEach(function(item, idx) {
+                    var statusBadge = '';
+                    var status = item.status || '';
+                    if (status === '已提交') {
+                        statusBadge = '<span class="badge badge-primary">已提交</span>';
+                    } else if (status === '已通过') {
+                        statusBadge = '<span class="badge badge-success">已通过</span>';
+                    } else if (status === '已拒绝') {
+                        statusBadge = '<span class="badge badge-danger">已拒绝</span>';
+                    } else {
+                        statusBadge = '<span class="badge badge-secondary">' + status + '</span>';
+                    }
+
+                    var auditor = item.auditorName || item.auditOperatorName || '-';
+
+                    var actions = '';
+                    if (status === '已提交') {
+                        actions = '<button class="btn btn-warning btn-sm audit-btn" data-id="' + item.id + '" data-appno="' + (item.id || '') + '" data-client="' + (item.clientName || '') + '">' +
+                                    '<i class="fas fa-check-circle"></i> 审核' +
+                                  '</button>';
+                    } else {
+                        actions = '<span class="text-muted">-</span>';
+                    }
+
+                    var typeMap = {
+                        'VOLUNTARY': '主动退住',
+                        'FORCED': '违规劝退',
+                        'TRANSFER': '转院'
+                    };
+
+                    tbody.append(
+                        '<tr>' +
+                            '<td>' + (idx + 1) + '</td>' +
+                            '<td>' + (item.id || '-') + '</td>' +
+                            '<td>' + (item.clientName || '-') + '</td>' +
+                            '<td>' + (typeMap[item.type] || item.type || '-') + '</td>' +
+                            '<td>' + (item.time || (item.createTime || '-')) + '</td>' +
+                            '<td>' + statusBadge + '</td>' +
+                            '<td>' + auditor + '</td>' +
+                            '<td>' + actions + '</td>' +
+                        '</tr>'
+                    );
+                });
+            });
+        }
+
+        // 审核弹窗
+        $(document).on('click', '.audit-btn', function() {
+            auditId = $(this).data('id');
+            $('#auditAppNo').text($(this).data('appno'));
+            $('#auditClientName').text($(this).data('client'));
+            $('#auditOpinion').val('');
+            $('#auditModal').modal('show');
+        });
+
+        // 通过
+        $('#approveBtn').click(function() {
+            doAudit(true);
+        });
+
+        // 拒绝
+        $('#rejectBtn').click(function() {
+            doAudit(false);
+        });
+
+        function doAudit(approve) {
+            if (!auditId) return;
+            var data = {
+                approve: approve,
+                auditOpinion: $('#auditOpinion').val().trim()
+            };
+            $.ajax({
+                url: '/api/check-out-applications/' + auditId + '/audit',
+                type: 'PUT',
+                contentType: 'application/json',
+                data: JSON.stringify(data),
+                success: function(resp) {
+                    if (resp.code === 200 || resp.success) {
+                        $('#auditModal').modal('hide');
+                        showToast(approve ? '已通过审核' : '已拒绝申请', 'success');
+                        loadList();
+                    } else {
+                        showToast(resp.message || '操作失败', 'danger');
+                    }
+                },
+                error: function() {
+                    showToast('操作失败，请稍后重试', 'danger');
+                }
+            });
+        }
+
+        // 初始加载
+        loadList();
+    });
+    </script>
+    </th:block>
+</body>
+</html>

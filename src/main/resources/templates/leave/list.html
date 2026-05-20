@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{fragments/layout}">
+<head>
+    <title th:text="'请假管理'">请假管理</title>
+</head>
+<body>
+<th:block layout:fragment="content">
+    <!-- 页面标题 -->
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="mb-0"><i class="fas fa-calendar-alt text-info"></i> 请假管理</h5>
+    </div>
+
+    <!-- 搜索栏 -->
+    <div class="search-bar">
+        <form class="form-inline" onsubmit="searchLeave(); return false;">
+            <div class="form-group mr-3">
+                <label class="mr-2"><i class="fas fa-user"></i> 老人姓名：</label>
+                <input type="text" class="form-control form-control-sm" id="searchClientName" placeholder="输入老人姓名" style="width:130px;">
+            </div>
+            <div class="form-group mr-3">
+                <label class="mr-2"><i class="fas fa-tag"></i> 状态：</label>
+                <select class="form-control form-control-sm" id="searchStatus" style="width:110px;">
+                    <option value="">全部</option>
+                    <option value="PENDING">待审核</option>
+                    <option value="APPROVED">已通过</option>
+                    <option value="REJECTED">已拒绝</option>
+                </select>
+            </div>
+            <button type="submit" class="btn btn-primary btn-sm mr-2">
+                <i class="fas fa-search"></i> 搜索
+            </button>
+            <button type="button" class="btn btn-outline-secondary btn-sm mr-2" onclick="resetSearch()">
+                <i class="fas fa-undo"></i> 重置
+            </button>
+            <a href="/page/leave-applications/add" class="btn btn-success btn-sm">
+                <i class="fas fa-plus"></i> 新增请假
+            </a>
+        </form>
+    </div>
+
+    <!-- 请假列表卡片 -->
+    <div class="card">
+        <div class="card-header">
+            <i class="fas fa-list"></i> 请假列表
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0" id="leaveTable">
+                    <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>老人姓名</th>
+                        <th>请假时间</th>
+                        <th>预计结束</th>
+                        <th>实际归院</th>
+                        <th>状态</th>
+                        <th>审核人</th>
+                        <th style="width:200px;">操作</th>
+                    </tr>
+                    </thead>
+                    <tbody id="leaveTableBody">
+                    <tr id="loadingRow">
+                        <td colspan="8" class="text-center text-muted py-4">
+                            <i class="fas fa-spinner fa-spin"></i> 加载中...
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ==================== 审核弹窗 ==================== -->
+<div class="modal fade" id="auditModal" tabindex="-1">
+    <div class="modal-dialog modal-sm">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h6 class="modal-title"><i class="fas fa-check-circle text-primary"></i> 审核请假申请</h6>
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="auditId">
+                <div class="mb-3">
+                    <p class="mb-1"><strong>申请人：</strong><span id="auditClientName"></span></p>
+                    <p class="mb-1"><strong>请假时间：</strong><span id="auditLeaveTime"></span></p>
+                    <p class="mb-3"><strong>预计结束：</strong><span id="auditPredictedEnd"></span></p>
+                </div>
+                <div class="text-center">
+                    <button type="button" class="btn btn-success btn-lg mr-3" onclick="submitAudit(true)" style="min-width:100px;">
+                        <i class="fas fa-check"></i> 同意
+                    </button>
+                    <button type="button" class="btn btn-danger btn-lg" onclick="submitAudit(false)" style="min-width:100px;">
+                        <i class="fas fa-times"></i> 拒绝
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ==================== 归院登记弹窗 ==================== -->
+<div class="modal fade" id="returnModal" tabindex="-1">
+    <div class="modal-dialog modal-sm">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h6 class="modal-title"><i class="fas fa-door-open text-success"></i> 归院登记</h6>
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="returnId">
+                <div class="form-group">
+                    <label>实际归院时间 <span class="text-danger">*</span></label>
+                    <input type="datetime-local" class="form-control" id="returnTime">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary btn-sm" data-dismiss="modal">取消</button>
+                <button type="button" class="btn btn-success btn-sm" onclick="submitReturn()">
+                    <i class="fas fa-check"></i> 确认归院
+                </button>
+            </div>
+        </div>
+    </div>
+</th:block>
+
+<th:block layout:fragment="script-extra">
+    <script>
+        var allLeaves = [];
+
+        // ==================== 页面初始化 ====================
+        $(function() {
+            loadLeaves();
+        });
+
+        // ==================== 加载请假数据 ====================
+        function loadLeaves() {
+            $.get('/api/leave-applications', function(res) {
+                if (res.code === 200) {
+                    allLeaves = res.data || [];
+                    renderTable(allLeaves);
+                } else {
+                    showToast(res.message || '加载请假列表失败', 'error');
+                }
+            }).fail(function() {
+                showToast('网络异常，加载失败', 'error');
+            });
+        }
+
+        // ==================== 渲染表格 ====================
+        function renderTable(data) {
+            var html = '';
+            if (!data || data.length === 0) {
+                html = '<tr><td colspan="8" class="text-center text-muted py-4"><i class="fas fa-inbox"></i> 暂无数据</td></tr>';
+            } else {
+                $.each(data, function(i, item) {
+                    var statusLabel = getStatusBadge(item.status);
+                    html += '<tr>' +
+                        '<td>' + item.id + '</td>' +
+                        '<td>' + escapeHtml(item.clientName || '-') + '</td>' +
+                        '<td>' + formatDateTime(item.leaveTime) + '</td>' +
+                        '<td>' + formatDateTime(item.predictedEnd) + '</td>' +
+                        '<td>' + formatDateTime(item.actualReturnTime) + '</td>' +
+                        '<td>' + statusLabel + '</td>' +
+                        '<td>' + escapeHtml(item.auditor || '-') + '</td>' +
+                        '<td>' + getActionButtons(item) + '</td>' +
+                        '</tr>';
+                });
+            }
+            $('#leaveTableBody').html(html);
+        }
+
+        // ==================== 获取操作按钮 ====================
+        function getActionButtons(item) {
+            var html = '';
+            if (item.status === 'PENDING') {
+                html += '<button class="btn btn-outline-primary btn-sm btn-action" onclick="openAudit(' + item.id + ')" title="审核">' +
+                    '    <i class="fas fa-check-circle"></i> 审核' +
+                    '</button>';
+            }
+            if (item.status === 'APPROVED' && !item.actualReturnTime) {
+                html += '<button class="btn btn-outline-success btn-sm btn-action" onclick="openReturn(' + item.id + ')" title="归院登记">' +
+                    '    <i class="fas fa-door-open"></i> 归院' +
+                    '</button>';
+            }
+            if (!html) {
+                html = '<span class="text-muted">-</span>';
+            }
+            return html;
+        }
+
+        // ==================== 搜索 ====================
+        function searchLeave() {
+            var name = $('#searchClientName').val().trim();
+            var status = $('#searchStatus').val();
+            var filtered = allLeaves;
+            if (name) {
+                filtered = filtered.filter(function(item) {
+                    return item.clientName && item.clientName.indexOf(name) !== -1;
+                });
+            }
+            if (status) {
+                filtered = filtered.filter(function(item) {
+                    return item.status === status;
+                });
+            }
+            renderTable(filtered);
+        }
+
+        function resetSearch() {
+            $('#searchClientName').val('');
+            $('#searchStatus').val('');
+            renderTable(allLeaves);
+        }
+
+        // ==================== 状态标签 ====================
+        function getStatusBadge(status) {
+            if (status === 'PENDING') return '<span class="badge badge-primary">已提交</span>';
+            if (status === 'APPROVED') return '<span class="badge badge-success">已通过</span>';
+            if (status === 'REJECTED') return '<span class="badge badge-danger">已拒绝</span>';
+            return '<span class="badge badge-light">未知</span>';
+        }
+
+        // ==================== 审核弹窗 ====================
+        function openAudit(id) {
+            var item = allLeaves.find(function(l) { return l.id === id; });
+            if (!item) return;
+            $('#auditId').val(item.id);
+            $('#auditClientName').text(item.clientName || '-');
+            $('#auditLeaveTime').text(formatDateTime(item.leaveTime));
+            $('#auditPredictedEnd').text(formatDateTime(item.predictedEnd));
+            $('#auditModal').modal('show');
+        }
+
+        function submitAudit(approve) {
+            var id = $('#auditId').val();
+            $.ajax({
+                url: '/api/leave-applications/' + id + '/audit',
+                type: 'PUT',
+                contentType: 'application/json',
+                data: JSON.stringify({ approve: approve }),
+                success: function(res) {
+                    if (res.code === 200) {
+                        showToast(approve ? '审核通过' : '已拒绝', 'success');
+                        $('#auditModal').modal('hide');
+                        loadLeaves();
+                    } else {
+                        showToast(res.message || '审核失败', 'error');
+                    }
+                },
+                error: function() {
+                    showToast('网络异常，审核失败', 'error');
+                }
+            });
+        }
+
+        // ==================== 归院登记 ====================
+        function openReturn(id) {
+            $('#returnId').val(id);
+            // 设置默认时间为当前时间（本地时间）
+            var now = new Date();
+            var y = now.getFullYear();
+            var m = String(now.getMonth() + 1).padStart(2, '0');
+            var d = String(now.getDate()).padStart(2, '0');
+            var h = String(now.getHours()).padStart(2, '0');
+            var mi = String(now.getMinutes()).padStart(2, '0');
+            $('#returnTime').val(y + '-' + m + '-' + d + 'T' + h + ':' + mi);
+            $('#returnModal').modal('show');
+        }
+
+        function submitReturn() {
+            var id = $('#returnId').val();
+            var returnTime = $('#returnTime').val();
+            if (!returnTime) {
+                showToast('请选择归院时间', 'warning');
+                return;
+            }
+            // 将 datetime-local 格式转为 ISO 格式
+            var returnDate = new Date(returnTime);
+            var isoTime = returnDate.toISOString();
+            $.ajax({
+                url: '/api/leave-applications/' + id + '/return',
+                type: 'PUT',
+                contentType: 'application/json',
+                data: JSON.stringify({ actualReturnTime: isoTime }),
+                success: function(res) {
+                    if (res.code === 200) {
+                        showToast('归院登记成功', 'success');
+                        $('#returnModal').modal('hide');
+                        loadLeaves();
+                    } else {
+                        showToast(res.message || '归院登记失败', 'error');
+                    }
+                },
+                error: function() {
+                    showToast('网络异常，归院登记失败', 'error');
+                }
+            });
+        }
+
+    </script>
+</th:block>
+</body>
+</html>

@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{fragments/layout}">
+<head>
+    <title th:text="'床位管理'">床位管理</title>
+    <th:block layout:fragment="head-extra">
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css">
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2-bootstrap4-theme@1.0.0/dist/select2-bootstrap4.min.css">
+    </th:block>
+</head>
+<body>
+<th:block layout:fragment="content">
+    <!-- 页面标题 -->
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="mb-0"><i class="fas fa-bed text-primary"></i> 床位管理</h5>
+    </div>
+
+    <!-- 搜索栏 -->
+    <div class="search-bar">
+        <form class="form-inline" onsubmit="searchBeds(); return false;">
+            <div class="form-group mr-3">
+                <label class="mr-2"><i class="fas fa-building"></i> 楼栋：</label>
+                <input type="text" class="form-control form-control-sm" id="searchBuilding" placeholder="输入楼栋名称" style="width:120px;">
+            </div>
+            <div class="form-group mr-3">
+                <label class="mr-2"><i class="fas fa-door-open"></i> 房间号：</label>
+                <input type="number" class="form-control form-control-sm" id="searchRoomNo" placeholder="输入房间号" style="width:110px;">
+            </div>
+            <button type="submit" class="btn btn-primary btn-sm mr-2">
+                <i class="fas fa-search"></i> 搜索
+            </button>
+            <button type="button" class="btn btn-outline-secondary btn-sm mr-2" onclick="resetSearch()">
+                <i class="fas fa-undo"></i> 重置
+            </button>
+            <a href="/page/beds/add" class="btn btn-success btn-sm">
+                <i class="fas fa-plus"></i> 新增床位
+            </a>
+        </form>
+    </div>
+
+    <!-- 床位列表卡片 -->
+    <div class="card">
+        <div class="card-header">
+            <i class="fas fa-list"></i> 床位列表
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0" id="bedTable">
+                    <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>楼栋</th>
+                        <th>房间号</th>
+                        <th>床位号</th>
+                        <th>状态</th>
+                        <th>备注</th>
+                        <th style="width:260px;">操作</th>
+                    </tr>
+                    </thead>
+                    <tbody id="bedTableBody">
+                    <tr id="loadingRow">
+                        <td colspan="7" class="text-center text-muted py-4">
+                            <i class="fas fa-spinner fa-spin"></i> 加载中...
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ==================== 编辑弹窗 ==================== -->
+<div class="modal fade" id="editModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h6 class="modal-title"><i class="fas fa-edit text-primary"></i> 编辑床位</h6>
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="editId">
+                <div class="form-group">
+                    <label>楼栋 <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" id="editBuilding" placeholder="如：A栋">
+                </div>
+                <div class="form-group">
+                    <label>房间号 <span class="text-danger">*</span></label>
+                    <input type="number" class="form-control" id="editRoomNo" placeholder="如：101">
+                </div>
+                <div class="form-group">
+                    <label>床位号 <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" id="editBedNo" placeholder="如：01">
+                </div>
+                <div class="form-group">
+                    <label>状态</label>
+                    <select class="form-control" id="editBedStatus">
+                        <option value="1">空闲</option>
+                        <option value="2">已入住</option>
+                        <option value="3">维修</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>备注</label>
+                    <textarea class="form-control" id="editRemarks" rows="2" placeholder="备注信息"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary btn-sm" data-dismiss="modal">取消</button>
+                <button type="button" class="btn btn-primary btn-sm" onclick="submitEdit()">
+                    <i class="fas fa-save"></i> 保存
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ==================== 修改状态弹窗 ==================== -->
+<div class="modal fade" id="statusModal" tabindex="-1">
+    <div class="modal-dialog modal-sm">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h6 class="modal-title"><i class="fas fa-exchange-alt text-info"></i> 修改床位状态</h6>
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="statusBedId">
+                <div class="form-group">
+                    <label>选择新状态：</label>
+                    <select class="form-control" id="newStatus">
+                        <option value="1">空闲</option>
+                        <option value="2">已入住</option>
+                        <option value="3">维修</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary btn-sm" data-dismiss="modal">取消</button>
+                <button type="button" class="btn btn-info btn-sm" onclick="submitStatusChange()">
+                    <i class="fas fa-check"></i> 确认修改
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ==================== 分配床位弹窗 ==================== -->
+<div class="modal fade" id="assignModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h6 class="modal-title"><i class="fas fa-user-plus text-success"></i> 分配床位</h6>
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="assignBedId">
+                <div class="form-group">
+                    <label>选择老人 <span class="text-danger">*</span></label>
+                    <select class="form-control" id="assignCustomer" style="width:100%;">
+                        <option value="">-- 请选择老人 --</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary btn-sm" data-dismiss="modal">取消</button>
+                <button type="button" class="btn btn-success btn-sm" onclick="submitAssign()">
+                    <i class="fas fa-check"></i> 确认分配
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ==================== 换床弹窗 ==================== -->
+<div class="modal fade" id="swapModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h6 class="modal-title"><i class="fas fa-arrows-alt-h text-warning"></i> 换床</h6>
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="swapOldBedId">
+                <input type="hidden" id="swapOldBedNo">
+                <div class="form-group">
+                    <label>当前床位</label>
+                    <input type="text" class="form-control" id="swapCurrentBed" readonly>
+                </div>
+                <div class="form-group">
+                    <label>目标楼栋</label>
+                    <input type="text" class="form-control" id="swapBuilding" placeholder="如：A栋">
+                </div>
+                <div class="form-group">
+                    <label>目标房间号</label>
+                    <input type="number" class="form-control" id="swapRoomNo" placeholder="如：101">
+                </div>
+                <div class="form-group">
+                    <label>目标床位号 <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" id="swapNewBedNo" placeholder="如：02">
+                </div>
+                <div class="form-group">
+                    <label>老人ID <span class="text-danger">*</span></label>
+                    <input type="number" class="form-control" id="swapClientId" placeholder="老人ID">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary btn-sm" data-dismiss="modal">取消</button>
+                <button type="button" class="btn btn-warning btn-sm" onclick="submitSwap()">
+                    <i class="fas fa-check"></i> 确认换床
+                </button>
+            </div>
+        </div>
+    </div>
+</th:block>
+
+<th:block layout:fragment="script-extra">
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <script>
+        var allBeds = [];
+
+        // ==================== 页面初始化 ====================
+        $(function() {
+            loadBeds();
+            loadCustomers();
+        });
+
+        // ==================== 加载床位数据 ====================
+        function loadBeds() {
+            $.get('/api/beds', function(res) {
+                if (res.code === 200) {
+                    allBeds = res.data || [];
+                    renderTable(allBeds);
+                } else {
+                    showToast(res.message || '加载床位列表失败', 'error');
+                }
+            }).fail(function() {
+                showToast('网络异常，加载失败', 'error');
+            });
+        }
+
+        // ==================== 渲染表格 ====================
+        function renderTable(data) {
+            var html = '';
+            if (!data || data.length === 0) {
+                html = '<tr><td colspan="7" class="text-center text-muted py-4"><i class="fas fa-inbox"></i> 暂无数据</td></tr>';
+            } else {
+                $.each(data, function(i, bed) {
+                    var statusLabel = getStatusBadge(bed.bedStatus);
+                    html += '<tr>' +
+                        '<td>' + bed.id + '</td>' +
+                        '<td>' + escapeHtml(bed.building) + '</td>' +
+                        '<td>' + bed.roomNo + '</td>' +
+                        '<td>' + escapeHtml(bed.bedNo) + '</td>' +
+                        '<td>' + statusLabel + '</td>' +
+                        '<td>' + escapeHtml(bed.remarks || '-') + '</td>' +
+                        '<td>' +
+                        '    <button class="btn btn-outline-primary btn-sm btn-action" onclick="openEdit(' + bed.id + ')" title="编辑">' +
+                        '        <i class="fas fa-edit"></i>' +
+                        '    </button>' +
+                        '    <button class="btn btn-outline-info btn-sm btn-action" onclick="openStatus(' + bed.id + ')" title="修改状态">' +
+                        '        <i class="fas fa-exchange-alt"></i>' +
+                        '    </button>' +
+                        '    <button class="btn btn-outline-success btn-sm btn-action" onclick="openAssign(' + bed.id + ')" title="分配床位">' +
+                        '        <i class="fas fa-user-plus"></i>' +
+                        '    </button>' +
+                        '    <button class="btn btn-outline-warning btn-sm btn-action" onclick="openSwap(' + bed.id + ')" title="换床">' +
+                        '        <i class="fas fa-arrows-alt-h"></i>' +
+                        '    </button>' +
+                        '</td>' +
+                        '</tr>';
+                });
+            }
+            $('#bedTableBody').html(html);
+        }
+
+        // ==================== 搜索 ====================
+        function searchBeds() {
+            var building = $('#searchBuilding').val().trim();
+            var roomNo = $('#searchRoomNo').val().trim();
+            var filtered = allBeds;
+            if (building) {
+                filtered = filtered.filter(function(b) {
+                    return b.building && b.building.indexOf(building) !== -1;
+                });
+            }
+            if (roomNo) {
+                filtered = filtered.filter(function(b) {
+                    return b.roomNo && b.roomNo.toString() === roomNo;
+                });
+            }
+            renderTable(filtered);
+        }
+
+        function resetSearch() {
+            $('#searchBuilding').val('');
+            $('#searchRoomNo').val('');
+            renderTable(allBeds);
+        }
+
+        // ==================== 状态标签 ====================
+        function getStatusBadge(status) {
+            if (status === 1) return '<span class="badge badge-success">空闲</span>';
+            if (status === 2) return '<span class="badge badge-warning">已入住</span>';
+            if (status === 3) return '<span class="badge badge-secondary">维修</span>';
+            return '<span class="badge badge-light">未知</span>';
+        }
+
+        // ==================== 编辑弹窗 ====================
+        function openEdit(id) {
+            var bed = allBeds.find(function(b) { return b.id === id; });
+            if (!bed) return;
+            $('#editId').val(bed.id);
+            $('#editBuilding').val(bed.building);
+            $('#editRoomNo').val(bed.roomNo);
+            $('#editBedNo').val(bed.bedNo);
+            $('#editBedStatus').val(bed.bedStatus);
+            $('#editRemarks').val(bed.remarks || '');
+            $('#editModal').modal('show');
+        }
+
+        function submitEdit() {
+            var id = $('#editId').val();
+            var data = {
+                building: $('#editBuilding').val().trim(),
+                roomNo: parseInt($('#editRoomNo').val()),
+                bedNo: $('#editBedNo').val().trim(),
+                bedStatus: parseInt($('#editBedStatus').val()),
+                remarks: $('#editRemarks').val().trim()
+            };
+            if (!data.building || !data.roomNo || !data.bedNo) {
+                showToast('请填写楼栋、房间号和床位号', 'warning');
+                return;
+            }
+            $.ajax({
+                url: '/api/beds/' + id,
+                type: 'PUT',
+                contentType: 'application/json',
+                data: JSON.stringify(data),
+                success: function(res) {
+                    if (res.code === 200) {
+                        showToast('更新成功', 'success');
+                        $('#editModal').modal('hide');
+                        loadBeds();
+                    } else {
+                        showToast(res.message || '更新失败', 'error');
+                    }
+                },
+                error: function() {
+                    showToast('网络异常，更新失败', 'error');
+                }
+            });
+        }
+
+        // ==================== 修改状态弹窗 ====================
+        function openStatus(id) {
+            $('#statusBedId').val(id);
+            var bed = allBeds.find(function(b) { return b.id === id; });
+            if (bed) {
+                $('#newStatus').val(bed.bedStatus);
+            }
+            $('#statusModal').modal('show');
+        }
+
+        function submitStatusChange() {
+            var id = $('#statusBedId').val();
+            var status = parseInt($('#newStatus').val());
+            $.ajax({
+                url: '/api/beds/' + id + '/status',
+                type: 'PATCH',
+                contentType: 'application/json',
+                data: JSON.stringify({ bedStatus: status }),
+                success: function(res) {
+                    if (res.code === 200) {
+                        showToast('状态修改成功', 'success');
+                        $('#statusModal').modal('hide');
+                        loadBeds();
+                    } else {
+                        showToast(res.message || '修改失败', 'error');
+                    }
+                },
+                error: function() {
+                    showToast('网络异常，修改失败', 'error');
+                }
+            });
+        }
+
+        // ==================== 分配床位弹窗 ====================
+        function loadCustomers() {
+            $.get('/api/clients', function(res) {
+                if (res.code === 200 && res.data) {
+                    var sel = $('#assignCustomer');
+                    sel.empty().append('<option value="">-- 请选择老人 --</option>');
+                    $.each(res.data, function(i, c) {
+                        sel.append('<option value="' + c.id + '">' + escapeHtml(c.name) + ' (ID: ' + c.id + ')</option>');
+                    });
+                }
+            }).fail(function() {
+                // 静默失败，用户打开弹窗时再加载
+            });
+        }
+
+        function openAssign(bedId) {
+            $('#assignBedId').val(bedId);
+            // 重新加载老人列表
+            $.get('/api/clients', function(res) {
+                if (res.code === 200 && res.data) {
+                    var sel = $('#assignCustomer');
+                    sel.empty().append('<option value="">-- 请选择老人 --</option>');
+                    $.each(res.data, function(i, c) {
+                        sel.append('<option value="' + c.id + '">' + escapeHtml(c.name) + ' (ID: ' + c.id + ')</option>');
+                    });
+                }
+            }).fail(function() {
+                showToast('加载老人列表失败', 'error');
+            });
+            $('#assignModal').modal('show');
+        }
+
+        function submitAssign() {
+            var bedId = $('#assignBedId').val();
+            var customerId = $('#assignCustomer').val();
+            if (!customerId) {
+                showToast('请选择一位老人', 'warning');
+                return;
+            }
+            $.ajax({
+                url: '/api/beds/assign',
+                type: 'POST',
+                data: { customerId: customerId, bedId: bedId },
+                success: function(res) {
+                    if (res.code === 200) {
+                        showToast('分配成功', 'success');
+                        $('#assignModal').modal('hide');
+                        loadBeds();
+                    } else {
+                        showToast(res.message || '分配失败', 'error');
+                    }
+                },
+                error: function() {
+                    showToast('网络异常，分配失败', 'error');
+                }
+            });
+        }
+
+        // ==================== 换床弹窗 ====================
+        function openSwap(bedId) {
+            var bed = allBeds.find(function(b) { return b.id === bedId; });
+            if (!bed) return;
+            $('#swapOldBedId').val(bed.id);
+            $('#swapOldBedNo').val(bed.bedNo);
+            $('#swapCurrentBed').val(bed.building + ' - ' + bed.roomNo + ' - ' + bed.bedNo);
+            $('#swapBuilding').val(bed.building);
+            $('#swapRoomNo').val(bed.roomNo);
+            $('#swapNewBedNo').val('');
+            $('#swapClientId').val('');
+            $('#swapModal').modal('show');
+        }
+
+        function submitSwap() {
+            var data = {
+                building: $('#swapBuilding').val().trim(),
+                roomNo: parseInt($('#swapRoomNo').val()),
+                oldBedNo: $('#swapOldBedNo').val(),
+                newBedNo: $('#swapNewBedNo').val().trim(),
+                clientId: parseInt($('#swapClientId').val())
+            };
+            if (!data.building || !data.roomNo || !data.newBedNo || !data.clientId) {
+                showToast('请填写完整换床信息', 'warning');
+                return;
+            }
+            $.ajax({
+                url: '/api/beds/swap',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(data),
+                success: function(res) {
+                    if (res.code === 200) {
+                        showToast('换床成功', 'success');
+                        $('#swapModal').modal('hide');
+                        loadBeds();
+                    } else {
+                        showToast(res.message || '换床失败', 'error');
+                    }
+                },
+                error: function() {
+                    showToast('网络异常，换床失败', 'error');
+                }
+            });
+        }
+
+    </script>
+</th:block>
+</body>
+</html>
