@@ -1,93 +1,92 @@
 package java.DAO;
 
+import java.Util.FileStorageUtil;
 import java.io.Serializable;
-import java.util.*;
+import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
-import java.Util.FileStorageUtil;
 
 public abstract class BaseFileDAO<T extends Serializable, ID extends Serializable>
         implements GenericDAO<T, ID> {
 
-    // 内存缓存
-    protected Map<ID, T> memoryCache = new ConcurrentHashMap<>();
-    protected AtomicLong idCounter = new AtomicLong(1);
-    protected Class<T> entityClass;
+    protected final Map<ID, T> memoryCache = new ConcurrentHashMap<>();
+    protected final AtomicLong idCounter = new AtomicLong(1);
+    protected final Class<T> entityClass;
 
     public BaseFileDAO(Class<T> entityClass) {
         this.entityClass = entityClass;
-        initStorage();
+        FileStorageUtil.initStorageDirectory();
         loadFromFile();
     }
 
-    /**
-     * 初始化存储
-     */
-    private void initStorage() {
-        FileStorageUtil.initStorageDirectory();
-    }
-
-    /**
-     * 从文件加载数据到内存
-     */
     protected void loadFromFile() {
         try {
             List<T> entities = FileStorageUtil.readEntitiesFromFile(entityClass);
             memoryCache.clear();
-
             for (T entity : entities) {
                 ID id = getId(entity);
-                if (id != null) {
-                    memoryCache.put(id, entity);
-
-                    // 更新ID计数器
-                    if (id instanceof Long) {
-                        long idValue = (Long) id;
-                        if (idValue >= idCounter.get()) {
-                            idCounter.set(idValue + 1);
-                        }
-                    } else if (id instanceof Integer) {
-                        int idValue = (Integer) id;
-                        if (idValue >= idCounter.get()) {
-                            idCounter.set(idValue + 1);
-                        }
-                    }
+                if (id == null) {
+                    continue;
                 }
+                memoryCache.put(id, entity);
+                updateCounterById(id);
             }
         } catch (Exception e) {
             System.err.println("加载数据失败: " + e.getMessage());
         }
     }
 
-    /**
-     * 保存数据到文件
-     */
     protected void saveToFile() {
         try {
-            List<T> entities = new ArrayList<>(memoryCache.values());
-            FileStorageUtil.writeEntitiesToFile(entityClass, entities);
+            FileStorageUtil.writeEntitiesToFile(entityClass, new ArrayList<>(memoryCache.values()));
         } catch (Exception e) {
             System.err.println("保存数据失败: " + e.getMessage());
         }
     }
 
-    /**
-     * 生成新的ID
-     */
-    protected ID generateNewId() {
-        return (ID) Long.valueOf(idCounter.getAndIncrement());
+    protected void updateCounterById(ID id) {
+        if (id instanceof Integer) {
+            int value = (Integer) id;
+            if (value >= idCounter.get()) {
+                idCounter.set(value + 1L);
+            }
+        } else if (id instanceof Long) {
+            long value = (Long) id;
+            if (value >= idCounter.get()) {
+                idCounter.set(value + 1L);
+            }
+        }
     }
 
-    /**
-     * 抽象方法：获取实体的ID
-     */
+    protected ID generateNewId() {
+        long nextId = idCounter.getAndIncrement();
+        Class<?> idType = resolveIdType();
+        if (Integer.class.equals(idType) || int.class.equals(idType)) {
+            return (ID) Integer.valueOf((int) nextId);
+        }
+        if (String.class.equals(idType)) {
+            return (ID) String.valueOf(nextId);
+        }
+        return (ID) Long.valueOf(nextId);
+    }
+
+    private Class<?> resolveIdType() {
+        try {
+            Method getIdMethod = entityClass.getMethod("getId");
+            return getIdMethod.getReturnType();
+        } catch (Exception ignored) {
+            return Long.class;
+        }
+    }
+
     protected abstract ID getId(T entity);
 
-    /**
-     * 抽象方法：设置实体的ID
-     */
     protected abstract void setId(T entity, ID id);
 
     @Override
@@ -98,8 +97,8 @@ public abstract class BaseFileDAO<T extends Serializable, ID extends Serializabl
                 id = generateNewId();
                 setId(entity, id);
             }
-
             memoryCache.put(id, entity);
+            updateCounterById(id);
             saveToFile();
             return entity;
         } catch (Exception e) {
@@ -115,7 +114,6 @@ public abstract class BaseFileDAO<T extends Serializable, ID extends Serializabl
             if (id == null || !memoryCache.containsKey(id)) {
                 return save(entity);
             }
-
             memoryCache.put(id, entity);
             saveToFile();
             return entity;
@@ -127,43 +125,45 @@ public abstract class BaseFileDAO<T extends Serializable, ID extends Serializabl
 
     @Override
     public boolean deleteById(ID id) {
-        try {
-            if (memoryCache.remove(id) != null) {
-                saveToFile();
-                return true;
-            }
-            return false;
-        } catch (Exception e) {
-            System.err.println("删除实体失败: " + e.getMessage());
-            return false;
+        if (memoryCache.remove(id) != null) {
+            saveToFile();
+            return true;
         }
+        return false;
     }
 
     @Override
     public boolean softDelete(ID id) {
-        try {
-            Optional<T> entityOpt = findById(id);
-            if (entityOpt.isPresent()) {
-                T entity = entityOpt.get();
-
-                // 尝试设置逻辑删除标记
-                try {
-                    java.lang.reflect.Method setDeletedMethod = entity.getClass().getMethod("setDeleted", Boolean.class);
-                    setDeletedMethod.invoke(entity, true);
-                    memoryCache.put(id, entity);
-                    saveToFile();
-                    return true;
-                } catch (NoSuchMethodException e) {
-                    // 如果没有逻辑删除标记，则物理删除
-                    return deleteById(id);
-                } catch (Exception e) {
-                    System.err.println("逻辑删除失败: " + e.getMessage());
-                    return false;
-                }
-            }
+        Optional<T> entityOpt = findById(id);
+        if (!entityOpt.isPresent()) {
             return false;
-        } catch (Exception e) {
-            System.err.println("逻辑删除失败: " + e.getMessage());
+        }
+
+        T entity = entityOpt.get();
+        if (invokeBooleanDelete(entity) || invokeIntegerDelete(entity)) {
+            memoryCache.put(id, entity);
+            saveToFile();
+            return true;
+        }
+        return deleteById(id);
+    }
+
+    private boolean invokeBooleanDelete(T entity) {
+        try {
+            Method method = entity.getClass().getMethod("setDeleted", Boolean.class);
+            method.invoke(entity, true);
+            return true;
+        } catch (Exception ignored) {
+            return false;
+        }
+    }
+
+    private boolean invokeIntegerDelete(T entity) {
+        try {
+            Method method = entity.getClass().getMethod("setIsDeleted", Integer.class);
+            method.invoke(entity, 1);
+            return true;
+        } catch (Exception ignored) {
             return false;
         }
     }
@@ -180,9 +180,7 @@ public abstract class BaseFileDAO<T extends Serializable, ID extends Serializabl
 
     @Override
     public List<T> findByCondition(Predicate<T> condition) {
-        return memoryCache.values().stream()
-                .filter(condition)
-                .collect(Collectors.toList());
+        return memoryCache.values().stream().filter(condition).collect(Collectors.toList());
     }
 
     @Override
@@ -197,14 +195,14 @@ public abstract class BaseFileDAO<T extends Serializable, ID extends Serializabl
 
     @Override
     public List<T> saveAll(List<T> entities) {
-        List<T> savedEntities = new ArrayList<>();
+        List<T> saved = new ArrayList<>();
         for (T entity : entities) {
-            T saved = save(entity);
-            if (saved != null) {
-                savedEntities.add(saved);
+            T result = save(entity);
+            if (result != null) {
+                saved.add(result);
             }
         }
-        return savedEntities;
+        return saved;
     }
 
     @Override

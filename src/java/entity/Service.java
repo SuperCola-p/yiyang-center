@@ -2,26 +2,44 @@ package java.entity;
 
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Iterator;
+import java.util.List;
 
 public class Service extends Operator implements Serializable {
-    private ArrayList<Client> clients=new ArrayList<>();
-    void addCustomer(Client client){
-        this.clients.add(client);
+    private final List<Integer> clientIds = new ArrayList<>();
+    private Boolean deleted = false;
+
+    public Service() {
     }
-    void removeCusomer(Client client){
-        this.clients.remove(client);
+
+    public Service(String loginCode, String password, String realName) {
+        super(loginCode, password, realName);
     }
-    Client searchCustomer(Client client){
-        Iterator<Client> it=clients.iterator();
-        while (it.hasNext()){
-            if(client.equals(it.next())){
-                return it.next();
-            }
+
+    public List<Integer> getClientIds() {
+        return clientIds;
+    }
+
+    public Boolean getDeleted() {
+        return deleted;
+    }
+
+    public void setDeleted(Boolean deleted) {
+        this.deleted = deleted;
+    }
+
+    public void addCustomer(Client client) {
+        if (client != null && client.getId() != null && !clientIds.contains(client.getId())) {
+            clientIds.add(client.getId());
         }
-        return null;
     }
-    void AddCheckOutApplication(Client client,checkOutApplication checkOutApplication){
-        client.addCheckOutApplication(checkOutApplication);
+
+    public void removeCustomer(Client client) {
+        if (client != null) {
+            clientIds.remove(client.getId());
+        }
+    }
+
+    public boolean servesClient(Integer clientId) {
+        return clientId != null && clientIds.contains(clientId);
     }
 }

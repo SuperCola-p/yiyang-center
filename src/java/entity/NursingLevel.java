@@ -3,16 +3,17 @@ package java.entity;
 import java.io.Serializable;
 import java.util.Iterator;
 
-public class NursingLevel implements Iterable<NursingItem> , Serializable { // 实现接口
+public class NursingLevel implements Iterable<NursingItem>, Serializable {
     private Long id;
     private String levelName;
     private String status;
-    // 类型改为 NursingItemArray
     private NursingItemArray nursingItems = new NursingItemArray();
+    private Boolean deleted = false;
 
     public NursingItemArray getNursingItems() {
         return nursingItems;
     }
+
     public void setNursingItems(NursingItemArray nursingItems) {
         this.nursingItems = nursingItems;
     }
@@ -44,5 +45,13 @@ public class NursingLevel implements Iterable<NursingItem> , Serializable { // �
 
     public void setId(Long id) {
         this.id = id;
+    }
+
+    public Boolean getDeleted() {
+        return deleted;
+    }
+
+    public void setDeleted(Boolean deleted) {
+        this.deleted = deleted;
     }
 }

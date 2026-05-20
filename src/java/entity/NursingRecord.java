@@ -1,32 +1,20 @@
-package java.entity;// java.entity.NursingRecord.java
+package java.entity;
+
 import java.io.Serializable;
 import java.time.LocalDateTime;
 
 public class NursingRecord implements Serializable {
-    private NursingRecord(){};
     private Long id;
-    // 客户ID
     private Long clientId;
-    // 护理项目ID
     private Long nursingItemId;
-    // 执行护理的健康管家(护工)ID
     private Long healthAssistantId;
-    // 护理执行时间
     private LocalDateTime nursingTime;
-    // 本次护理消耗的数量
     private String remarks;
-
-    public String getRemarks() {
-        return remarks;
-    }
-
-    public void setRemarks(String remarks) {
-        this.remarks = remarks;
-    }
-
     private Integer execQuantity;
-    // 逻辑删除标记
     private Boolean isDeleted = false;
+
+    public NursingRecord() {
+    }
 
     public Boolean getDeleted() {
         return isDeleted;
@@ -82,5 +70,13 @@ public class NursingRecord implements Serializable {
 
     public void setId(Long id) {
         this.id = id;
+    }
+
+    public String getRemarks() {
+        return remarks;
+    }
+
+    public void setRemarks(String remarks) {
+        this.remarks = remarks;
     }
 }
