@@ -15,7 +15,7 @@ public class ControlBed {
     private Client customer;
     private ArrayList<Bed> beds;
     private ArrayList<Client> customers;
-
+    
     private static final String DEFAULT_BUILDING = "606";
 
     public ControlBed() {
@@ -36,14 +36,14 @@ public class ControlBed {
         this.customers = new ArrayList<>();
     }
 
-
+  
 
     public enum UsageStatus {
         CURRENT,
         HISTORY
     }
 
-
+    
 
     /**
      * 修改床位详情：只能修改床位使用的结束时间
