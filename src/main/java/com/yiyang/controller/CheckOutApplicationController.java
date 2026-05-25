@@ -29,7 +29,19 @@ public class CheckOutApplicationController {
     @PutMapping("/{id}/audit")
     public ApiResponse<CheckOutApplication> audit(@PathVariable String id, @RequestBody AuditRequest request) {
         try {
-            CheckOutApplication result = service.auditApplication(id, request.getStatus(), request.getAuditor());
+            String status;
+            String auditor = request.getAuditor();
+
+            // 前端传 approve 布尔值，转为中文状态（退住前端用中文状态值）
+            if (request.getApprove() != null) {
+                status = request.getApprove() ? "已通过" : "已拒绝";
+            } else if (request.getStatus() != null) {
+                status = request.getStatus();
+            } else {
+                return ApiResponse.error("审核状态不能为空");
+            }
+
+            CheckOutApplication result = service.auditApplication(id, status, auditor);
             return ApiResponse.success("审核退住申请成功", result);
         } catch (Exception e) {
             return ApiResponse.error(e.getMessage());

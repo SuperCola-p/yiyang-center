@@ -38,7 +38,7 @@ public class LeaveApplication {
     private LocalDateTime actualReturnTime;
 
     @Column(length = 20)
-    private String status = "已提交";
+    private String status = "PENDING";
 
     @Column(length = 50)
     private String auditor;

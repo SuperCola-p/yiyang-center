@@ -2,6 +2,7 @@ package com.yiyang.service.impl;
 
 import com.yiyang.entity.ClientNursingSetting;
 import com.yiyang.repository.ClientNursingSettingRepository;
+import com.yiyang.repository.NursingItemRepository;
 import com.yiyang.service.ClientNursingSettingService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -18,11 +19,21 @@ public class ClientNursingSettingServiceImpl implements ClientNursingSettingServ
     @Autowired
     private ClientNursingSettingRepository repository;
 
+    @Autowired
+    private NursingItemRepository nursingItemRepository;
+
     // ==================== 护理服务查询 ====================
 
     @Override
     public List<ClientNursingSetting> getClientSettings(Long clientId) {
-        return repository.findByClientIdAndIsDeletedFalse(clientId);
+        List<ClientNursingSetting> settings = repository.findByClientIdAndIsDeletedFalse(clientId);
+        settings.forEach(s -> {
+            if (s.getNursingItemId() != null) {
+                nursingItemRepository.findById(s.getNursingItemId())
+                    .ifPresent(item -> s.setNursingItemName(item.getName()));
+            }
+        });
+        return settings;
     }
 
     @Override
@@ -32,7 +43,14 @@ public class ClientNursingSettingServiceImpl implements ClientNursingSettingServ
 
     @Override
     public List<ClientNursingSetting> getAllSettings() {
-        return repository.findByIsDeletedFalse();
+        List<ClientNursingSetting> settings = repository.findByIsDeletedFalse();
+        settings.forEach(s -> {
+            if (s.getNursingItemId() != null) {
+                nursingItemRepository.findById(s.getNursingItemId())
+                    .ifPresent(item -> s.setNursingItemName(item.getName()));
+            }
+        });
+        return settings;
     }
 
     @Override

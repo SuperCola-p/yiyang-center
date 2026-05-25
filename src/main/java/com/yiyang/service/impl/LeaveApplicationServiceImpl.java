@@ -25,7 +25,7 @@ public class LeaveApplicationServiceImpl implements LeaveApplicationService {
             application.setId("LV-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase());
         }
         if (application.getStatus() == null) {
-            application.setStatus("已提交");
+            application.setStatus("PENDING");
         }
         if (application.getDeleted() == null) {
             application.setDeleted(false);
@@ -50,7 +50,7 @@ public class LeaveApplicationServiceImpl implements LeaveApplicationService {
                 .orElseThrow(() -> new RuntimeException("请假申请不存在，ID: " + id));
 
         app.setActualReturnTime(actualReturnTime);
-        app.setStatus("已销假");
+        app.setStatus("RETURNED");
         return repository.save(app);
     }
 

@@ -23,6 +23,12 @@ spring:
         format_sql: true
         dialect: org.hibernate.dialect.MySQL8Dialect
     open-in-view: false
+    defer-datasource-initialization: true   # 延迟数据源初始化到 Hibernate DDL 之后
+
+  sql:
+    init:
+      mode: always                         # 始终执行初始化脚本（默认 embedded 仅对 H2 生效）
+      data-locations: classpath:data.sql    # 演示数据脚本
 
   thymeleaf:
     cache: false             # 开发时禁用模板缓存，方便热更新

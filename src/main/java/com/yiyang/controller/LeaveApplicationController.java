@@ -30,7 +30,20 @@ public class LeaveApplicationController {
     @PutMapping("/{id}/audit")
     public ApiResponse<LeaveApplication> audit(@PathVariable String id, @RequestBody AuditRequest request) {
         try {
-            LeaveApplication result = service.auditApplication(id, request.getStatus(), request.getAuditor());
+            String status;
+            String auditor = request.getAuditor();
+
+            // 前端传 approve 布尔值，转为英文状态
+            if (request.getApprove() != null) {
+                status = request.getApprove() ? "APPROVED" : "REJECTED";
+            } else if (request.getStatus() != null) {
+                // 兼容直接传 status 的情况
+                status = request.getStatus();
+            } else {
+                return ApiResponse.error("审核状态不能为空");
+            }
+
+            LeaveApplication result = service.auditApplication(id, status, auditor);
             return ApiResponse.success("审核请假申请成功", result);
         } catch (Exception e) {
             return ApiResponse.error(e.getMessage());
@@ -39,10 +52,14 @@ public class LeaveApplicationController {
 
     @PutMapping("/{id}/return")
     public ApiResponse<LeaveApplication> recordReturn(@PathVariable String id,
-                                                      @RequestParam(required = false) String actualReturnTime) {
+                                                      @RequestBody(required = false) LeaveApplication body) {
         try {
-            LocalDateTime returnTime = actualReturnTime != null
-                    ? LocalDateTime.parse(actualReturnTime) : LocalDateTime.now();
+            LocalDateTime returnTime;
+            if (body != null && body.getActualReturnTime() != null) {
+                returnTime = body.getActualReturnTime();
+            } else {
+                returnTime = LocalDateTime.now();
+            }
             LeaveApplication result = service.recordReturn(id, returnTime);
             return ApiResponse.success("销假成功", result);
         } catch (Exception e) {

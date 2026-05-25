@@ -60,7 +60,8 @@ CREATE TABLE IF NOT EXISTS bed (
     bed_no          VARCHAR(10)     DEFAULT NULL             COMMENT '床位号',
     bed_status      INT             DEFAULT 1               COMMENT '床位状态(1-空闲,2-已入住,3-维修)',
     remarks         VARCHAR(255)    DEFAULT NULL             COMMENT '备注',
-    PRIMARY KEY (id)
+    PRIMARY KEY (id),
+    UNIQUE KEY uk_building_room_bed (building, room_no, bed_no)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='床位表';
 
 -- ---------------------------------------------------

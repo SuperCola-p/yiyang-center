@@ -39,4 +39,15 @@ public class NursingRecord {
 
     @Column(name = "is_deleted")
     private Boolean isDeleted = false;
+
+    // ========== 非数据库字段，关联查询时填充 ==========
+
+    @Transient
+    private String clientName;
+
+    @Transient
+    private String nursingItemName;
+
+    @Transient
+    private String healthAssistantName;
 }

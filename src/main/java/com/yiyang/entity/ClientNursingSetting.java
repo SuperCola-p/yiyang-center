@@ -45,4 +45,7 @@ public class ClientNursingSetting {
 
     @Column(name = "is_deleted")
     private Boolean isDeleted = false;
+
+    @Transient
+    private String nursingItemName;
 }
