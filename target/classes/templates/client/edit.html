@@ -86,7 +86,7 @@
                         <div class="col-md-2">
                             <div class="form-group">
                                 <label>房间号</label>
-                                <input type="text" class="form-control" id="roomNo">
+                                <input type="number" class="form-control" id="roomNo" min="1" placeholder="如：101">
                             </div>
                         </div>
                         <div class="col-md-2">
@@ -171,6 +171,30 @@
 
         $('#clientForm').on('submit', function(e) {
             e.preventDefault();
+
+            var buildingNo = $('#buildingNo').val().trim();
+            var roomNo = $('#roomNo').val().trim();
+            var bedNo = $('#bedNo').val().trim();
+
+            // 如果填了床位信息，校验房间号为数字
+            if (roomNo) {
+                if (!/^\d+$/.test(roomNo)) {
+                    showToast('房间号必须为数字，请勿填入字符串', 'warning');
+                    $('#roomNo').focus();
+                    return;
+                }
+                if (!buildingNo) {
+                    showToast('填写房间号时楼栋号也必填', 'warning');
+                    $('#buildingNo').focus();
+                    return;
+                }
+                if (!bedNo) {
+                    showToast('填写房间号时床位号也必填', 'warning');
+                    $('#bedNo').focus();
+                    return;
+                }
+            }
+
             var data = {
                 name: $('#name').val().trim(),
                 age: parseInt($('#age').val()) || 0,
@@ -179,9 +203,9 @@
                 phone: $('#phone').val().trim(),
                 familyContact: $('#familyContact').val().trim(),
                 idCard: $('#idCard').val().trim(),
-                buildingNo: $('#buildingNo').val().trim(),
-                roomNo: $('#roomNo').val().trim(),
-                bedNo: $('#bedNo').val().trim(),
+                buildingNo: buildingNo,
+                roomNo: roomNo,
+                bedNo: bedNo,
                 birthday: $('#birthday').val(),
                 checkInDate: $('#checkInDate').val(),
                 contractExpireDate: $('#contractExpireDate').val(),

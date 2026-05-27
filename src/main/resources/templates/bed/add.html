@@ -77,30 +77,49 @@
 <th:block layout:fragment="script-extra">
     <script>
         function submitBed() {
-            var data = {
-                building: $('#building').val().trim(),
-                roomNo: parseInt($('#roomNo').val()),
-                bedNo: $('#bedNo').val().trim(),
-                bedStatus: parseInt($('#bedStatus').val()),
-                remarks: $('#remarks').val().trim()
-            };
+            var building = $('#building').val().trim();
+            var roomNoStr = $('#roomNo').val().toString().trim();
+            var bedNo = $('#bedNo').val().trim();
+            var bedStatus = parseInt($('#bedStatus').val());
+            var remarks = $('#remarks').val().trim();
 
-            // 前端校验
-            if (!data.building) {
-                showToast('请输入楼栋', 'warning');
+            // 前端校验：楼栋
+            if (!building) {
+                showToast('楼栋不能为空', 'warning');
                 $('#building').focus();
                 return;
             }
-            if (!data.roomNo) {
-                showToast('请输入房间号', 'warning');
+            // 前端校验：房间号必须为数字
+            if (!roomNoStr) {
+                showToast('房间号不能为空', 'warning');
                 $('#roomNo').focus();
                 return;
             }
-            if (!data.bedNo) {
-                showToast('请输入床位号', 'warning');
+            var roomNo = parseInt(roomNoStr);
+            if (isNaN(roomNo) || roomNo <= 0) {
+                showToast('房间号必须为正整数，请勿填入字符串', 'warning');
+                $('#roomNo').focus();
+                return;
+            }
+            // 前端校验：床位号非空
+            if (!bedNo) {
+                showToast('床位号不能为空', 'warning');
                 $('#bedNo').focus();
                 return;
             }
+            // 前端校验：状态值合法
+            if (isNaN(bedStatus) || bedStatus < 1 || bedStatus > 3) {
+                showToast('床位状态无效', 'warning');
+                return;
+            }
+
+            var data = {
+                building: building,
+                roomNo: roomNo,
+                bedNo: bedNo,
+                bedStatus: bedStatus,
+                remarks: remarks
+            };
 
             // 禁用按钮防止重复提交
             $('#submitBtn').prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> 提交中...');

@@ -69,7 +69,7 @@ public class NursingRecordController {
     }
 
     @GetMapping("/assistant/{healthAssistantId}")
-    public ApiResponse<List<NursingRecord>> getByAssistant(@PathVariable Long healthAssistantId) {
+    public ApiResponse<List<NursingRecord>> getByAssistant(@PathVariable String healthAssistantId) {
         try {
             return ApiResponse.success(service.getRecordsByHealthAssistant(healthAssistantId));
         } catch (Exception e) {

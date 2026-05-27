@@ -22,7 +22,7 @@ public interface NursingRecordService {
 
     List<NursingRecord> getRecordsByClient(Long clientId);
 
-    List<NursingRecord> getRecordsByHealthAssistant(Long healthAssistantId);
+    List<NursingRecord> getRecordsByHealthAssistant(String healthAssistantId);
 
     List<NursingRecord> getRecordsByNursingItem(Long nursingItemId);
 
@@ -32,5 +32,5 @@ public interface NursingRecordService {
 
     long getRecordCountByClient(Long clientId);
 
-    long getRecordCountByHealthAssistant(Long healthAssistantId);
+    long getRecordCountByHealthAssistant(String healthAssistantId);
 }

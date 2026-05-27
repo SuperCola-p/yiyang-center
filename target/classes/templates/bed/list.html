@@ -647,17 +647,49 @@
 
         function submitEdit() {
             var id = $('#editId').val();
-            var data = {
-                building: $('#editBuilding').val().trim(),
-                roomNo: parseInt($('#editRoomNo').val()),
-                bedNo: $('#editBedNo').val().trim(),
-                bedStatus: parseInt($('#editBedStatus').val()),
-                remarks: $('#editRemarks').val().trim()
-            };
-            if (!data.building || !data.roomNo || !data.bedNo) {
-                showToast('请填写楼栋、房间号和床位号', 'warning');
+            var building = $('#editBuilding').val().trim();
+            var roomNoStr = $('#editRoomNo').val().toString().trim();
+            var bedNo = $('#editBedNo').val().trim();
+            var bedStatus = parseInt($('#editBedStatus').val());
+            var remarks = $('#editRemarks').val().trim();
+
+            // 楼栋非空
+            if (!building) {
+                showToast('楼栋不能为空', 'warning');
+                $('#editBuilding').focus();
                 return;
             }
+            // 房间号必须为数字
+            if (!roomNoStr) {
+                showToast('房间号不能为空', 'warning');
+                $('#editRoomNo').focus();
+                return;
+            }
+            var roomNo = parseInt(roomNoStr);
+            if (isNaN(roomNo) || roomNo <= 0) {
+                showToast('房间号必须为正整数，请勿填入字符串', 'warning');
+                $('#editRoomNo').focus();
+                return;
+            }
+            // 床位号非空
+            if (!bedNo) {
+                showToast('床位号不能为空', 'warning');
+                $('#editBedNo').focus();
+                return;
+            }
+            // 状态值合法
+            if (isNaN(bedStatus) || bedStatus < 1 || bedStatus > 3) {
+                showToast('状态值无效', 'warning');
+                return;
+            }
+
+            var data = {
+                building: building,
+                roomNo: roomNo,
+                bedNo: bedNo,
+                bedStatus: bedStatus,
+                remarks: remarks
+            };
             $.ajax({
                 url: '/api/beds/' + id,
                 type: 'PUT',

@@ -42,35 +42,23 @@ public class NursingRecordServiceImpl implements NursingRecordService {
 
         // 填充 clientName
         if (record.getClientId() != null) {
-            Optional<Client> clientOpt = clientRepository.findByIdAndDeletedFalse(
-                    record.getClientId().intValue());
-            clientOpt.ifPresent(c -> record.setClientName(c.getName()));
+            clientRepository.findByIdAndDeletedFalse(record.getClientId().intValue())
+                    .ifPresent(c -> record.setClientName(c.getName()));
         }
 
         // 填充 nursingItemName
         if (record.getNursingItemId() != null) {
-            Optional<NursingItem> itemOpt = nursingItemRepository.findById(
-                    record.getNursingItemId());
-            itemOpt.ifPresent(item -> record.setNursingItemName(item.getName()));
+            nursingItemRepository.findById(record.getNursingItemId())
+                    .ifPresent(item -> record.setNursingItemName(item.getName()));
         }
 
-        // 填充 healthAssistantName
-        if (record.getHealthAssistantId() != null) {
-            try {
-                List<Operator> operators = operatorRepository.findAll();
-                String hid = String.valueOf(record.getHealthAssistantId());
-                for (Operator op : operators) {
-                    if (hid.equals(op.getLoginCode()) || hid.equals(op.getRealName())) {
-                        record.setHealthAssistantName(op.getRealName());
-                        break;
-                    }
-                }
-                if (record.getHealthAssistantName() == null) {
-                    record.setHealthAssistantName(hid);
-                }
-            } catch (Exception e) {
-                record.setHealthAssistantName(String.valueOf(record.getHealthAssistantId()));
-            }
+        // 填充 healthAssistantName（healthAssistantId 存储的是 loginCode）
+        if (record.getHealthAssistantId() != null && !record.getHealthAssistantId().isEmpty()) {
+            operatorRepository.findByLoginCodeAndNotDeleted(record.getHealthAssistantId())
+                    .ifPresentOrElse(
+                            op -> record.setHealthAssistantName(op.getRealName()),
+                            () -> record.setHealthAssistantName(record.getHealthAssistantId())
+                    );
         }
 
         return record;
@@ -135,7 +123,7 @@ public class NursingRecordServiceImpl implements NursingRecordService {
     }
 
     @Override
-    public List<NursingRecord> getRecordsByHealthAssistant(Long healthAssistantId) {
+    public List<NursingRecord> getRecordsByHealthAssistant(String healthAssistantId) {
         List<NursingRecord> records = repository.findByHealthAssistantIdAndIsDeletedFalse(healthAssistantId);
         return enrichRecords(records);
     }
@@ -164,7 +152,7 @@ public class NursingRecordServiceImpl implements NursingRecordService {
     }
 
     @Override
-    public long getRecordCountByHealthAssistant(Long healthAssistantId) {
+    public long getRecordCountByHealthAssistant(String healthAssistantId) {
         return repository.countByHealthAssistantIdAndIsDeletedFalse(healthAssistantId);
     }
 }

@@ -2,8 +2,10 @@ package com.yiyang.service.impl;
 
 import com.yiyang.entity.Bed;
 import com.yiyang.entity.BedDetails;
+import com.yiyang.entity.Client;
 import com.yiyang.repository.BedDetailsRepository;
 import com.yiyang.repository.BedRepository;
+import com.yiyang.repository.ClientRepository;
 import com.yiyang.service.BedService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -23,10 +25,27 @@ public class BedServiceImpl implements BedService {
     @Autowired
     private BedDetailsRepository bedDetailsRepository;
 
+    @Autowired
+    private ClientRepository clientRepository;
+
     // ==================== 床位 CRUD ====================
 
     @Override
     public Bed addBed(Bed bed) {
+        // 合理性校验
+        if (bed.getBuilding() == null || bed.getBuilding().trim().isEmpty()) {
+            throw new RuntimeException("楼栋不能为空");
+        }
+        if (bed.getRoomNo() == null || bed.getRoomNo() <= 0) {
+            throw new RuntimeException("房间号必须为正整数");
+        }
+        if (bed.getBedNo() == null || bed.getBedNo().trim().isEmpty()) {
+            throw new RuntimeException("床位号不能为空");
+        }
+        if (bed.getBedStatus() != null && (bed.getBedStatus() < 1 || bed.getBedStatus() > 3)) {
+            throw new RuntimeException("床位状态无效，必须为1(空闲)、2(已入住)或3(维修)");
+        }
+
         // 检查同一位置是否已有床
         Optional<Bed> existing = bedRepository.findByBuildingAndRoomNoAndBedNo(
                 bed.getBuilding(), bed.getRoomNo(), bed.getBedNo());
@@ -46,6 +65,20 @@ public class BedServiceImpl implements BedService {
     public Bed updateBed(Long id, Bed bed) {
         Bed existing = bedRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("床位不存在，ID: " + id));
+
+        // 合理性校验：只校验前端传过来的非 null 字段
+        if (bed.getBuilding() != null && bed.getBuilding().trim().isEmpty()) {
+            throw new RuntimeException("楼栋不能为空字符串");
+        }
+        if (bed.getRoomNo() != null && bed.getRoomNo() <= 0) {
+            throw new RuntimeException("房间号必须为正整数");
+        }
+        if (bed.getBedNo() != null && bed.getBedNo().trim().isEmpty()) {
+            throw new RuntimeException("床位号不能为空字符串");
+        }
+        if (bed.getBedStatus() != null && (bed.getBedStatus() < 1 || bed.getBedStatus() > 3)) {
+            throw new RuntimeException("床位状态无效，必须为1(空闲)、2(已入住)或3(维修)");
+        }
 
         if (bed.getBuilding() != null) {
             existing.setBuilding(bed.getBuilding());
@@ -142,9 +175,24 @@ public class BedServiceImpl implements BedService {
             throw new RuntimeException("床位已被占用");
         }
 
-        // 标记床为占用
+        // 标记床为占用，并写入备注（老人名字）
         bed.setBedStatus(2); // 2 = 占用
+        bed.setRemarks(bed.getBuilding() + "-" + bed.getRoomNo() + "号房-" + bed.getBedNo() + "床");
         bedRepository.save(bed);
+
+        // ===== 联动：同步更新老人的床位信息 =====
+        Optional<Client> clientOpt = clientRepository.findById(customerId);
+        if (clientOpt.isPresent()) {
+            Client client = clientOpt.get();
+            client.setBuildingNo(bed.getBuilding());
+            client.setRoomNo(bed.getRoomNo() != null ? String.valueOf(bed.getRoomNo()) : null);
+            client.setBedNo(bed.getBedNo());
+            clientRepository.save(client);
+
+            // 同步写入老人名字到床位备注
+            bed.setRemarks(client.getName() + "(入住中)");
+            bedRepository.save(bed);
+        }
 
         // 创建入住记录
         BedDetails details = BedDetails.builder()
@@ -193,9 +241,26 @@ public class BedServiceImpl implements BedService {
         newBed.setBedStatus(2);
         bedRepository.save(newBed);
 
-        // 旧床标记空闲
+        // 旧床标记空闲并清空备注
         oldBed.setBedStatus(1);
+        oldBed.setRemarks(null);
         bedRepository.save(oldBed);
+
+        // ===== 联动：同步更新老人的床位信息为新床 =====
+        if (params.getClientId() != null) {
+            Optional<Client> clientOpt = clientRepository.findById(params.getClientId());
+            if (clientOpt.isPresent()) {
+                Client client = clientOpt.get();
+                client.setBuildingNo(newBed.getBuilding());
+                client.setRoomNo(newBed.getRoomNo() != null ? String.valueOf(newBed.getRoomNo()) : null);
+                client.setBedNo(newBed.getBedNo());
+                clientRepository.save(client);
+
+                // 同步写入老人名字到新床位备注
+                newBed.setRemarks(client.getName() + "(入住中)");
+                bedRepository.save(newBed);
+            }
+        }
 
         // 创建新入住记录
         BedDetails newRecord = BedDetails.builder()
@@ -224,7 +289,19 @@ public class BedServiceImpl implements BedService {
         if (bedOpt.isPresent()) {
             Bed bed = bedOpt.get();
             bed.setBedStatus(1);
+            bed.setRemarks(null);
             bedRepository.save(bed);
+
+            // ===== 联动：清空老人的床位信息 =====
+            Optional<Client> clientOpt = clientRepository.findById(customerId);
+            if (clientOpt.isPresent()) {
+                Client client = clientOpt.get();
+                client.setBuildingNo(null);
+                client.setRoomNo(null);
+                client.setBedNo(null);
+                clientRepository.save(client);
+            }
+
             return true;
         }
         return false;

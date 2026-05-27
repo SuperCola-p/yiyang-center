@@ -97,6 +97,10 @@
     </th:block>
 
     <th:block layout:fragment="script-extra">
+    <script th:inline="javascript">
+    /* 当前用户角色，供 JS 权限判断 */
+    var currentUserRole = /*[[${session.loginUser != null ? session.loginUser.operatorType : ''}]]*/ '';
+    </script>
     <script>
     $(function() {
         var auditId = null;
@@ -127,10 +131,13 @@
                     var auditor = item.auditorName || item.auditOperatorName || '-';
 
                     var actions = '';
-                    if (status === '已提交') {
+                    // 审批按钮仅 ADMIN 可见
+                    if (status === '已提交' && currentUserRole === 'ADMIN') {
                         actions = '<button class="btn btn-outline-primary btn-sm btn-action audit-btn" data-id="' + item.id + '" data-appno="' + (item.id || '') + '" data-client="' + (item.clientName || '') + '" title="审核">' +
-                                    '<i class="fas fa-check-circle"></i>' +
+                                    '<i class="fas fa-check-circle"></i> 审核' +
                                   '</button>';
+                    } else if (status === '已提交') {
+                        actions = '<span class="badge badge-warning">待管理员审核</span>';
                     } else {
                         actions = '<span class="text-muted">-</span>';
                     }
@@ -234,10 +241,12 @@
                     }
                     var auditor = item.auditorName || item.auditOperatorName || '-';
                     var actions = '';
-                    if (status === '已提交') {
+                    if (status === '已提交' && currentUserRole === 'ADMIN') {
                         actions = '<button class="btn btn-outline-primary btn-sm btn-action audit-btn" data-id="' + item.id + '" data-appno="' + (item.id || '') + '" data-client="' + (item.clientName || '') + '" title="审核">' +
-                                    '<i class="fas fa-check-circle"></i>' +
+                                    '<i class="fas fa-check-circle"></i> 审核' +
                                   '</button>';
+                    } else if (status === '已提交') {
+                        actions = '<span class="badge badge-warning">待管理员审核</span>';
                     } else {
                         actions = '<span class="text-muted">-</span>';
                     }

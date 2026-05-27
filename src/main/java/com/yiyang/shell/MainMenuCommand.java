@@ -582,10 +582,10 @@ public class MainMenuCommand {
         List<NursingRecord> list = nursingRecordRepository.findAll().stream()
                 .filter(r -> !r.getIsDeleted()).collect(Collectors.toList());
         System.out.println("\n===== 护理记录列表 =====");
-        System.out.printf("%-5s %-10s %-10s %-10s %-20s %-10s%n", "ID", "老人ID", "项目ID", "护理员", "护理时间", "次数");
+            System.out.printf("%-5s %-10s %-10s %-10s %-20s %-10s%n", "ID", "老人ID", "项目ID", "护理员", "护理时间", "次数");
         for (NursingRecord r : list) {
             String time = r.getNursingTime() != null ? r.getNursingTime().format(DTF) : "-";
-            System.out.printf("%-5d %-10d %-10d %-10d %-20s %-10d%n",
+            System.out.printf("%-5d %-10d %-10d %-10s %-20s %-10d%n",
                     r.getId(), r.getClientId(), r.getNursingItemId(),
                     r.getHealthAssistantId(), time, r.getExecQuantity());
         }
@@ -595,7 +595,7 @@ public class MainMenuCommand {
         try {
             System.out.print("老人ID: "); Long cid = Long.parseLong(readLine());
             System.out.print("护理项目ID: "); Long nid = Long.parseLong(readLine());
-            System.out.print("护理员ID: "); Long hid = Long.parseLong(readLine());
+            System.out.print("护理员登录账号: "); String hid = readLine();
             System.out.print("护理时间(yyyy-MM-dd HH:mm): ");
             LocalDateTime time = LocalDateTime.parse(readLine(), DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"));
             System.out.print("执行次数: "); int qty = Integer.parseInt(readLine());

@@ -14,7 +14,7 @@ public interface NursingRecordRepository extends JpaRepository<NursingRecord, Lo
 
     List<NursingRecord> findByClientIdAndIsDeletedFalseOrderByNursingTimeDesc(Long clientId);
 
-    List<NursingRecord> findByHealthAssistantIdAndIsDeletedFalse(Long healthAssistantId);
+    List<NursingRecord> findByHealthAssistantIdAndIsDeletedFalse(String healthAssistantId);
 
     List<NursingRecord> findByNursingItemIdAndIsDeletedFalse(Long nursingItemId);
 
@@ -37,7 +37,7 @@ public interface NursingRecordRepository extends JpaRepository<NursingRecord, Lo
 
     long countByClientIdAndIsDeletedFalse(Long clientId);
 
-    long countByHealthAssistantIdAndIsDeletedFalse(Long healthAssistantId);
+    long countByHealthAssistantIdAndIsDeletedFalse(String healthAssistantId);
 
     boolean existsByClientIdAndNursingItemIdAndNursingTimeAndIsDeletedFalse(
             Long clientId, Long nursingItemId, LocalDateTime nursingTime);

@@ -37,8 +37,10 @@
                                 </select>
                             </div>
                             <div class="form-group">
-                                <label><span class="text-danger">*</span> 护理员 ID</label>
-                                <input type="text" class="form-control" id="healthAssistantId" placeholder="请输入护理员 ID" required>
+                                <label><span class="text-danger">*</span> 执行护理员</label>
+                                <select class="form-control" id="healthAssistantId" required>
+                                    <option value="">请选择护理员</option>
+                                </select>
                             </div>
                             <div class="form-group">
                                 <label><span class="text-danger">*</span> 护理时间</label>
@@ -88,6 +90,17 @@
             items.forEach(function(item) {
                 if (item.status === 'ENABLED') {
                     sel.append('<option value="' + item.id + '">' + item.name + '</option>');
+                }
+            });
+        });
+
+        // 加载护理员下拉（从操作员列表读取，传 loginCode）
+        $.get('/api/operators', function(resp) {
+            var operators = resp.data || resp || [];
+            var sel = $('#healthAssistantId');
+            operators.forEach(function(op) {
+                if (!op.deleted) {
+                    sel.append('<option value="' + op.loginCode + '">' + op.realName + '（' + op.loginCode + '）</option>');
                 }
             });
         });

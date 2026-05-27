@@ -25,8 +25,12 @@ public class NursingRecord {
     @Column(name = "nursing_item_id")
     private Long nursingItemId;
 
-    @Column(name = "health_assistant_id")
-    private Long healthAssistantId;
+    /**
+     * 护理员登录码（对应 operator.login_code），替代原来的数字 health_assistant_id
+     * ddl-auto=update 会自动将列类型从 bigint 更新为 varchar
+     */
+    @Column(name = "health_assistant_id", length = 50)
+    private String healthAssistantId;
 
     @Column(name = "nursing_time")
     private LocalDateTime nursingTime;

@@ -135,7 +135,7 @@
                         <div class="col-md-4">
                             <div class="form-group">
                                 <label>房间号 <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control" id="roomNo" required>
+                                <input type="number" class="form-control" id="roomNo" required min="1" placeholder="如：101">
                             </div>
                         </div>
                         <div class="col-md-4">
@@ -208,6 +208,13 @@
             if (!data.buildingNo) { showToast('请输入楼栋号', 'warning'); return; }
             if (!data.roomNo) { showToast('请输入房间号', 'warning'); return; }
             if (!data.bedNo) { showToast('请输入床位号', 'warning'); return; }
+
+            // 房间号合理性校验：必须为数字
+            if (!/^\d+$/.test(data.roomNo)) {
+                showToast('房间号必须为数字，请勿填入字符串', 'warning');
+                $('#roomNo').focus();
+                return;
+            }
 
             $.ajax({
                 url: '/api/clients',

@@ -1,9 +1,11 @@
 package com.yiyang.service.impl;
 
+import com.yiyang.entity.Bed;
 import com.yiyang.entity.Client;
 import com.yiyang.entity.ClientNursingSetting;
 import com.yiyang.entity.NursingLevel;
 import com.yiyang.entity.NursingLevelItem;
+import com.yiyang.repository.BedRepository;
 import com.yiyang.repository.ClientNursingSettingRepository;
 import com.yiyang.repository.ClientRepository;
 import com.yiyang.repository.NursingLevelItemRepository;
@@ -34,6 +36,9 @@ public class ClientServiceImpl implements ClientService {
     @Autowired
     private ClientNursingSettingRepository clientNursingSettingRepository;
 
+    @Autowired
+    private BedRepository bedRepository;
+
     // ==================== 老人基本信息 CRUD ====================
 
     @Override
@@ -49,6 +54,35 @@ public class ClientServiceImpl implements ClientService {
         Client existing = clientRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("老人信息不存在，ID: " + id));
 
+        // ===== 联动：检测床位是否变化 =====
+        String oldBuilding = existing.getBuildingNo();
+        String oldRoomNo   = existing.getRoomNo();
+        String oldBedNo    = existing.getBedNo();
+
+        boolean bedChanging = false;
+        String newBuilding = (client.getBuildingNo() != null) ? client.getBuildingNo() : oldBuilding;
+        String newRoomNo   = (client.getRoomNo()    != null) ? client.getRoomNo()    : oldRoomNo;
+        String newBedNo    = (client.getBedNo()     != null) ? client.getBedNo()     : oldBedNo;
+
+        // 判断床位信息是否实际发生了变化
+        boolean oldHasBed = oldBuilding != null && !oldBuilding.isEmpty()
+                         && oldRoomNo   != null && !oldRoomNo.isEmpty()
+                         && oldBedNo    != null && !oldBedNo.isEmpty();
+        boolean newHasBed = newBuilding != null && !newBuilding.isEmpty()
+                         && newRoomNo   != null && !newRoomNo.isEmpty()
+                         && newBedNo    != null && !newBedNo.isEmpty();
+
+        if (oldHasBed && newHasBed) {
+            bedChanging = !(oldBuilding.equals(newBuilding)
+                         && oldRoomNo.equals(newRoomNo)
+                         && oldBedNo.equals(newBedNo));
+        } else if (!oldHasBed && newHasBed) {
+            bedChanging = true; // 新分配
+        } else if (oldHasBed && !newHasBed) {
+            bedChanging = true; // 清除床位
+        }
+
+        // 更新老人基本信息
         if (client.getName() != null) existing.setName(client.getName());
         if (client.getAge() != null) existing.setAge(client.getAge());
         if (client.getGender() != null) existing.setGender(client.getGender());
@@ -66,6 +100,44 @@ public class ClientServiceImpl implements ClientService {
         if (client.getNurse() != null) existing.setNurse(client.getNurse());
         if (client.getHealthStatus() != null) existing.setHealthStatus(client.getHealthStatus());
         if (client.getType() != null) existing.setType(client.getType());
+
+        // ===== 联动：同步更新床位状态 & 备注 =====
+        if (bedChanging) {
+            String clientName = existing.getName(); // 当前老人名字
+            // 释放旧床位
+            if (oldHasBed) {
+                try {
+                    Integer oldRoomInt = Integer.parseInt(oldRoomNo);
+                    bedRepository.findByBuildingAndRoomNoAndBedNo(oldBuilding, oldRoomInt, oldBedNo)
+                            .ifPresent(oldBed -> {
+                                oldBed.setBedStatus(1); // 空闲
+                                oldBed.setRemarks(null);  // 清空备注
+                                bedRepository.save(oldBed);
+                            });
+                } catch (NumberFormatException ignored) {}
+            }
+            // 占用新床位：先校验床位是否存在
+            if (newHasBed) {
+                try {
+                    Integer newRoomInt = Integer.parseInt(newRoomNo);
+                    Optional<Bed> targetBedOpt = bedRepository.findByBuildingAndRoomNoAndBedNo(
+                            newBuilding, newRoomInt, newBedNo);
+                    if (!targetBedOpt.isPresent()) {
+                        throw new RuntimeException("目标床位不存在：" + newBuilding + "-" + newRoomNo + "-" + newBedNo
+                                + "，请先在床位管理中创建该床位");
+                    }
+                    Bed targetBed = targetBedOpt.get();
+                    if (targetBed.getBedStatus() != 1) {
+                        throw new RuntimeException("目标床位已被占用：" + newBuilding + "-" + newRoomNo + "-" + newBedNo);
+                    }
+                    targetBed.setBedStatus(2); // 占用
+                    targetBed.setRemarks(clientName + "(入住中)"); // 备注为老人名字
+                    bedRepository.save(targetBed);
+                } catch (NumberFormatException e) {
+                    throw new RuntimeException("房间号必须为数字：" + newRoomNo);
+                }
+            }
+        }
 
         return clientRepository.save(existing);
     }
