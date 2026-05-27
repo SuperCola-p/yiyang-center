@@ -259,7 +259,7 @@
             var sel = $('#nursingLevelSelect');
             sel.empty().append('<option value="">请选择护理等级</option>');
             $.each(list, function(i, item) {
-                sel.append('<option value="' + (item.id || item.levelId) + '">' + (item.levelName || item.name || item.nursingLevelName) + '</option>');
+                sel.append('<option value="' + (item.id || item.levelId) + '">' + item.levelName + '</option>');
             });
         });
     }

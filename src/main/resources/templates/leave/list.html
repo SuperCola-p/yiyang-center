@@ -182,7 +182,7 @@
             // 审批按钮：仅 ADMIN 可见
             if (item.status === 'PENDING') {
                 if (currentUserRole === 'ADMIN') {
-                    html += '<button class="btn btn-outline-primary btn-sm btn-action" onclick="openAudit(' + item.id + ')" title="审核">' +
+                    html += '<button class="btn btn-outline-primary btn-sm btn-action" onclick="openAudit(\'' + item.id + '\')" title="审核">' +
                         '    <i class="fas fa-check-circle"></i> 审核' +
                         '</button>';
                 } else {
@@ -191,7 +191,7 @@
             }
             // 归院登记：ADMIN/STAFF 均可操作
             if (item.status === 'APPROVED' && !item.actualReturnTime) {
-                html += '<button class="btn btn-outline-success btn-sm btn-action" onclick="openReturn(' + item.id + ')" title="归院登记">' +
+                html += '<button class="btn btn-outline-success btn-sm btn-action" onclick="openReturn(\'' + item.id + '\')" title="归院登记">' +
                     '    <i class="fas fa-door-open"></i> 归院' +
                     '</button>';
             }

@@ -169,7 +169,7 @@
             var list = resp.data || resp || [];
             var sel = $('#nursingLevel');
             $.each(list, function(i, item) {
-                sel.append('<option value="' + (item.name || item.nursingLevelName) + '">' + (item.name || item.nursingLevelName) + '</option>');
+                sel.append('<option value="' + item.levelName + '">' + item.levelName + '</option>');
             });
         });
 

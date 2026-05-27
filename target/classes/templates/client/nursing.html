@@ -196,7 +196,7 @@
             var sel = $('#purchaseLevel');
             sel.empty().append('<option value="">请选择护理等级</option>');
             $.each(list, function(i, item) {
-                sel.append('<option value="' + item.id + '">' + (item.name || item.nursingLevelName) + '</option>');
+                sel.append('<option value="' + item.id + '">' + item.levelName + '</option>');
             });
         });
     }
