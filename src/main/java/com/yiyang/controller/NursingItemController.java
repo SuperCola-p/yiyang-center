@@ -88,12 +88,17 @@ public class NursingItemController {
     }
 
     /**
-     * 查询所有护理项目
+     * 查询所有护理项目（支持按名称模糊搜索）
      */
     @GetMapping
-    public ApiResponse<List<NursingItem>> getAll() {
+    public ApiResponse<List<NursingItem>> getAll(@RequestParam(required = false) String name) {
         try {
-            List<NursingItem> list = nursingItemService.getAllNursingItems();
+            List<NursingItem> list;
+            if (name != null && !name.trim().isEmpty()) {
+                list = nursingItemService.searchNursingItemsByName(name.trim());
+            } else {
+                list = nursingItemService.getAllNursingItems();
+            }
             return ApiResponse.success(list);
         } catch (Exception e) {
             return ApiResponse.error(e.getMessage());
