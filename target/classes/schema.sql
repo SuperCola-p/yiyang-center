@@ -132,7 +132,7 @@ CREATE TABLE IF NOT EXISTS nursing_record (
     id                  BIGINT          NOT NULL AUTO_INCREMENT  COMMENT '主键ID',
     client_id           BIGINT          DEFAULT NULL             COMMENT '老人ID',
     nursing_item_id     BIGINT          DEFAULT NULL             COMMENT '护理项目ID',
-    health_assistant_id BIGINT          DEFAULT NULL             COMMENT '护理员ID',
+    health_assistant_id VARCHAR(50)     DEFAULT NULL             COMMENT '护理员登录码',
     nursing_time        DATETIME        DEFAULT NULL             COMMENT '护理执行时间',
     remarks             VARCHAR(500)    DEFAULT NULL             COMMENT '备注',
     exec_quantity       INT             DEFAULT 1               COMMENT '执行次数',

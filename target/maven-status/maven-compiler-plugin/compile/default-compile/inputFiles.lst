@@ -1,6 +1,7 @@
 D:\Coding_File\Java\yiyang-center1\src\main\java\com\yiyang\repository\NursingLevelItemRepository.java
 D:\Coding_File\Java\yiyang-center1\src\main\java\com\yiyang\controller\NursingLevelController.java
 D:\Coding_File\Java\yiyang-center1\src\main\java\com\yiyang\entity\ClientNursingSetting.java
+D:\Coding_File\Java\yiyang-center1\src\main\java\com\yiyang\config\RoleInterceptor.java
 D:\Coding_File\Java\yiyang-center1\src\main\java\com\yiyang\repository\BedDetailsRepository.java
 D:\Coding_File\Java\yiyang-center1\src\main\java\com\yiyang\service\OperatorService.java
 D:\Coding_File\Java\yiyang-center1\src\main\java\com\yiyang\service\NursingItemService.java

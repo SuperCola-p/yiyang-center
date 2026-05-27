@@ -5,7 +5,7 @@ spring:
   datasource:
     url: jdbc:mysql://localhost:3306/yiyang_center?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai&useSSL=false&allowPublicKeyRetrieval=true
     username: root
-    password: ~~~~~
+    password: djb0928djb
     driver-class-name: com.mysql.cj.jdbc.Driver
     hikari:
       minimum-idle: 5
