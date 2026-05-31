@@ -25,6 +25,8 @@ public interface ClientService {
 
     List<Client> searchClients(String name, String type);
 
+    List<Client> searchClients(String name, String buildingNo, String roomNo);
+
     List<Client> getClientsByType(String type);
 
     List<Client> getClientsByNursingLevel(String nursingLevel);

@@ -65,9 +65,15 @@ public class OperatorController {
     }
 
     @GetMapping
-    public ApiResponse<List<Operator>> getAll() {
+    public ApiResponse<List<Operator>> getAll(@RequestParam(required = false) String keyword) {
         try {
-            return ApiResponse.success(service.getAllOperators());
+            List<Operator> list;
+            if (keyword != null && !keyword.trim().isEmpty()) {
+                list = service.searchOperators(keyword.trim());
+            } else {
+                list = service.getAllOperators();
+            }
+            return ApiResponse.success(list);
         } catch (Exception e) {
             return ApiResponse.error(e.getMessage());
         }

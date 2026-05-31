@@ -177,6 +177,11 @@ public class ClientServiceImpl implements ClientService {
     }
 
     @Override
+    public List<Client> searchClients(String name, String buildingNo, String roomNo) {
+        return clientRepository.searchClients(name, buildingNo, roomNo);
+    }
+
+    @Override
     public List<Client> getClientsByType(String type) {
         return clientRepository.findByTypeAndDeletedFalse(type);
     }

@@ -31,4 +31,13 @@ public interface ClientRepository extends JpaRepository<Client, Integer>, JpaSpe
            "(:type IS NULL OR c.type = :type) AND " +
            "c.deleted = false")
     List<Client> searchClients(@Param("name") String name, @Param("type") String type);
+
+    @Query("SELECT c FROM Client c WHERE " +
+           "(:name IS NULL OR c.name LIKE %:name%) AND " +
+           "(:buildingNo IS NULL OR c.buildingNo LIKE %:buildingNo%) AND " +
+           "(:roomNo IS NULL OR c.roomNo LIKE %:roomNo%) AND " +
+           "c.deleted = false")
+    List<Client> searchClients(@Param("name") String name,
+                               @Param("buildingNo") String buildingNo,
+                               @Param("roomNo") String roomNo);
 }

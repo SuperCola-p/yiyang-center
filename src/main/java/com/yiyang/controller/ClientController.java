@@ -63,9 +63,17 @@ public class ClientController {
     }
 
     @GetMapping
-    public ApiResponse<List<Client>> getAll() {
+    public ApiResponse<List<Client>> getAll(
+            @RequestParam(required = false) String name,
+            @RequestParam(required = false) String buildingNo,
+            @RequestParam(required = false) String roomNo) {
         try {
-            List<Client> list = clientService.getAllClients();
+            List<Client> list;
+            if (name != null || buildingNo != null || roomNo != null) {
+                list = clientService.searchClients(name, buildingNo, roomNo);
+            } else {
+                list = clientService.getAllClients();
+            }
             return ApiResponse.success(list);
         } catch (Exception e) {
             return ApiResponse.error(e.getMessage());

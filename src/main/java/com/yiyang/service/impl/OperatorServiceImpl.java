@@ -82,6 +82,11 @@ public class OperatorServiceImpl implements OperatorService {
     }
 
     @Override
+    public List<Operator> searchOperators(String keyword) {
+        return repository.searchByKeyword(keyword);
+    }
+
+    @Override
     public LoginResponse login(String loginCode, String password) {
         Operator operator = repository.findById(loginCode)
                 .filter(o -> !Boolean.TRUE.equals(o.getDeleted()))

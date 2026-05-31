@@ -28,15 +28,6 @@
                     <label class="mr-2"><i class="fas fa-door-open"></i> 房间号：</label>
                     <input type="text" class="form-control form-control-sm" id="searchRoomNo" placeholder="输入房间号" style="width:100px;">
                 </div>
-                <div class="form-group mr-3">
-                    <label class="mr-2"><i class="fas fa-tag"></i> 状态：</label>
-                    <select class="form-control form-control-sm" id="searchStatus" style="width:100px;">
-                        <option value="">全部</option>
-                        <option value="ACTIVE">正常入住</option>
-                        <option value="LEAVE">请假</option>
-                        <option value="CHECKED_OUT">已退住</option>
-                    </select>
-                </div>
                 <button type="submit" class="btn btn-primary btn-sm mr-2">
                     <i class="fas fa-search"></i> 搜索
                 </button>
@@ -231,13 +222,11 @@
         var name = $('#searchName').val();
         var buildingNo = $('#searchBuildingNo').val();
         var roomNo = $('#searchRoomNo').val();
-        var status = $('#searchStatus').val();
         var url = '/api/clients';
         var params = [];
         if (name) params.push('name=' + encodeURIComponent(name));
         if (buildingNo) params.push('buildingNo=' + encodeURIComponent(buildingNo));
         if (roomNo) params.push('roomNo=' + encodeURIComponent(roomNo));
-        if (status) params.push('status=' + encodeURIComponent(status));
         if (params.length > 0) url += '?' + params.join('&');
 
         clientTable.ajax.url(url).load();

@@ -18,5 +18,7 @@ public interface OperatorService {
 
     List<Operator> getAllOperators();
 
+    List<Operator> searchOperators(String keyword);
+
     LoginResponse login(String loginCode, String password);
 }
