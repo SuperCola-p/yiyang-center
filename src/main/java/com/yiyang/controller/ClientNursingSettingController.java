@@ -2,6 +2,7 @@ package com.yiyang.controller;
 
 import com.yiyang.dto.ApiResponse;
 import com.yiyang.dto.ConsumeNursingRequest;
+import com.yiyang.dto.PurchaseNursingRequest;
 import com.yiyang.dto.RenewNursingRequest;
 import com.yiyang.entity.ClientNursingSetting;
 import com.yiyang.service.ClientNursingSettingService;
@@ -89,11 +90,14 @@ public class ClientNursingSettingController {
      * 购买护理服务
      */
     @PostMapping("/purchase")
-    public ApiResponse<ClientNursingSetting> purchase(@RequestParam Long clientId,
-                                                      @RequestParam Long nursingItemId,
-                                                      @RequestParam Integer quantity) {
+    public ApiResponse<ClientNursingSetting> purchase(@RequestBody PurchaseNursingRequest request) {
         try {
-            ClientNursingSetting result = service.purchaseService(clientId, nursingItemId, quantity);
+            ClientNursingSetting result = service.purchaseService(
+                    request.getClientId(),
+                    request.getNursingItemId(),
+                    request.getNursingLevelId(),
+                    request.getTotalQuantity(),
+                    request.getServiceDueDate());
             return ApiResponse.success("购买护理服务成功", result);
         } catch (Exception e) {
             return ApiResponse.error(e.getMessage());
@@ -104,12 +108,9 @@ public class ClientNursingSettingController {
      * 消费护理服务（扣减剩余次数）
      */
     @PostMapping("/consume")
-    public ApiResponse<ClientNursingSetting> consume(@RequestParam Long clientId,
-                                                     @RequestParam Long nursingItemId,
-                                                     @RequestBody ConsumeNursingRequest request) {
+    public ApiResponse<ClientNursingSetting> consume(@RequestBody ConsumeNursingRequest request) {
         try {
-            ClientNursingSetting result = service.consumeService(
-                    clientId, nursingItemId, request.getQuantity());
+            ClientNursingSetting result = service.consumeService(request.getId(), request.getQuantity());
             return ApiResponse.success("消费护理服务成功", result);
         } catch (Exception e) {
             return ApiResponse.error(e.getMessage());
@@ -120,13 +121,10 @@ public class ClientNursingSettingController {
      * 续费护理服务
      */
     @PostMapping("/renew")
-    public ApiResponse<ClientNursingSetting> renew(@RequestParam Long clientId,
-                                                   @RequestParam Long nursingItemId,
-                                                   @RequestBody RenewNursingRequest request) {
+    public ApiResponse<ClientNursingSetting> renew(@RequestBody RenewNursingRequest request) {
         try {
             ClientNursingSetting result = service.renewService(
-                    clientId, nursingItemId,
-                    request.getAdditionalQuantity(), request.getNewDueDate());
+                    request.getId(), request.getQuantity(), request.getServiceDueDate());
             return ApiResponse.success("续费护理服务成功", result);
         } catch (Exception e) {
             return ApiResponse.error(e.getMessage());

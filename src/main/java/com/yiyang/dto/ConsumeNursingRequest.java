@@ -4,5 +4,6 @@ import lombok.Data;
 
 @Data
 public class ConsumeNursingRequest {
+    private Long id;
     private Integer quantity;
 }

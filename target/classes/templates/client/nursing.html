@@ -281,7 +281,7 @@
         };
 
         $.ajax({
-            url: '/api/client-nursing-settings',
+            url: '/api/client-nursing-settings/purchase',
             type: 'POST',
             contentType: 'application/json',
             data: JSON.stringify(data),
@@ -294,8 +294,15 @@
                     showToast(resp.message || '购买失败', 'error');
                 }
             },
-            error: function() {
-                showToast('请求失败，请重试', 'error');
+            error: function(xhr) {
+                var errMsg = '请求失败，请重试';
+                try {
+                    if (xhr.responseText) {
+                        var resp = JSON.parse(xhr.responseText);
+                        if (resp.message) errMsg = resp.message;
+                    }
+                } catch(e) {}
+                showToast(errMsg, 'error');
             }
         });
     }

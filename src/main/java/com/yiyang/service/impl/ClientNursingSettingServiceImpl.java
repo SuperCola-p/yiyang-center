@@ -102,11 +102,75 @@ public class ClientNursingSettingServiceImpl implements ClientNursingSettingServ
     }
 
     @Override
+    public ClientNursingSetting purchaseService(Long clientId, Long nursingItemId,
+                                                Long nursingLevelId,
+                                                Integer totalQuantity,
+                                                LocalDate serviceDueDate) {
+        // 检查是否已有该服务的记录
+        Optional<ClientNursingSetting> existing =
+                repository.findByClientIdAndNursingItemIdAndIsDeletedFalse(clientId, nursingItemId);
+
+        if (existing.isPresent()) {
+            ClientNursingSetting setting = existing.get();
+            // 追加数量
+            setting.setTotalQuantity(setting.getTotalQuantity() + totalQuantity);
+            setting.setRemainingQuantity(setting.getRemainingQuantity() + totalQuantity);
+            // 更新到期日
+            if (serviceDueDate != null) {
+                setting.setServiceDueDate(serviceDueDate);
+            } else if (setting.getServiceDueDate() != null) {
+                setting.setServiceDueDate(setting.getServiceDueDate().plusMonths(1));
+            } else {
+                setting.setServiceDueDate(LocalDate.now().plusMonths(1));
+            }
+            setting.setServiceStatus("ACTIVE");
+            return repository.save(setting);
+        }
+
+        // 创建新记录
+        ClientNursingSetting setting = ClientNursingSetting.builder()
+                .clientId(clientId)
+                .nursingItemId(nursingItemId)
+                .nursingLevelId(nursingLevelId)
+                .purchaseDate(LocalDate.now())
+                .totalQuantity(totalQuantity)
+                .remainingQuantity(totalQuantity)
+                .serviceDueDate(serviceDueDate != null ? serviceDueDate : LocalDate.now().plusMonths(1))
+                .serviceStatus("ACTIVE")
+                .isDeleted(false)
+                .build();
+        return repository.save(setting);
+    }
+
+    @Override
     public ClientNursingSetting consumeService(Long clientId, Long nursingItemId,
                                                Integer quantity) {
         ClientNursingSetting setting = repository
                 .findByClientIdAndNursingItemIdAndIsDeletedFalse(clientId, nursingItemId)
                 .orElseThrow(() -> new RuntimeException("该老人没有购买此护理服务"));
+
+        int remaining = setting.getRemainingQuantity();
+        if (remaining < quantity) {
+            throw new RuntimeException("剩余次数不足，剩余: " + remaining + "，需要: " + quantity);
+        }
+
+        setting.setRemainingQuantity(remaining - quantity);
+
+        if (setting.getRemainingQuantity() == 0) {
+            setting.setServiceStatus("EXPIRED");
+        }
+
+        return repository.save(setting);
+    }
+
+    @Override
+    public ClientNursingSetting consumeService(Long settingId, Integer quantity) {
+        ClientNursingSetting setting = repository.findById(settingId)
+                .orElseThrow(() -> new RuntimeException("服务记录不存在"));
+
+        if (setting.getIsDeleted()) {
+            throw new RuntimeException("该服务记录已被删除");
+        }
 
         int remaining = setting.getRemainingQuantity();
         if (remaining < quantity) {
@@ -129,6 +193,33 @@ public class ClientNursingSettingServiceImpl implements ClientNursingSettingServ
         ClientNursingSetting setting = repository
                 .findByClientIdAndNursingItemIdAndIsDeletedFalse(clientId, nursingItemId)
                 .orElseThrow(() -> new RuntimeException("该老人没有购买此护理服务"));
+
+        // 追加次数
+        setting.setTotalQuantity(setting.getTotalQuantity() + additionalQuantity);
+        setting.setRemainingQuantity(setting.getRemainingQuantity() + additionalQuantity);
+
+        // 更新到期日，如果传入新日期则使用新日期，否则顺延一个月
+        if (newDueDate != null) {
+            setting.setServiceDueDate(newDueDate);
+        } else if (setting.getServiceDueDate() != null) {
+            setting.setServiceDueDate(setting.getServiceDueDate().plusMonths(1));
+        } else {
+            setting.setServiceDueDate(LocalDate.now().plusMonths(1));
+        }
+
+        setting.setServiceStatus("ACTIVE");
+        return repository.save(setting);
+    }
+
+    @Override
+    public ClientNursingSetting renewService(Long settingId, Integer additionalQuantity,
+                                             LocalDate newDueDate) {
+        ClientNursingSetting setting = repository.findById(settingId)
+                .orElseThrow(() -> new RuntimeException("服务记录不存在"));
+
+        if (setting.getIsDeleted()) {
+            throw new RuntimeException("该服务记录已被删除");
+        }
 
         // 追加次数
         setting.setTotalQuantity(setting.getTotalQuantity() + additionalQuantity);

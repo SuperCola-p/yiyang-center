@@ -5,6 +5,7 @@ import java.time.LocalDate;
 
 @Data
 public class RenewNursingRequest {
-    private Integer additionalQuantity;
-    private LocalDate newDueDate;
+    private Long id;
+    private Integer quantity;
+    private LocalDate serviceDueDate;
 }

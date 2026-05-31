@@ -1,6 +1,7 @@
 com\yiyang\entity\NursingLevelItem.class
 com\yiyang\service\impl\BedServiceImpl.class
 com\yiyang\controller\LeaveApplicationController.class
+com\yiyang\dto\PurchaseNursingRequest.class
 com\yiyang\dto\LoginRequest.class
 com\yiyang\service\LeaveApplicationService.class
 com\yiyang\entity\NursingItem.class
