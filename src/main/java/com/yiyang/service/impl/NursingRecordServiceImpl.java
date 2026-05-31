@@ -152,6 +152,21 @@ public class NursingRecordServiceImpl implements NursingRecordService {
     }
 
     @Override
+    public List<NursingRecord> searchRecords(Long clientId, Long nursingItemId,
+                                              String healthAssistantId,
+                                              LocalDateTime startTime, LocalDateTime endTime) {
+        if (startTime == null) {
+            startTime = LocalDateTime.of(2000, 1, 1, 0, 0);
+        }
+        if (endTime == null) {
+            endTime = LocalDateTime.of(2099, 12, 31, 23, 59);
+        }
+        List<NursingRecord> records = repository.findByConditions(
+                clientId, nursingItemId, healthAssistantId, startTime, endTime);
+        return enrichRecords(records);
+    }
+
+    @Override
     public long getRecordCountByHealthAssistant(String healthAssistantId) {
         return repository.countByHealthAssistantIdAndIsDeletedFalse(healthAssistantId);
     }

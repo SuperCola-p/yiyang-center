@@ -35,6 +35,23 @@ public interface NursingRecordRepository extends JpaRepository<NursingRecord, Lo
             @Param("start") LocalDateTime start,
             @Param("end") LocalDateTime end);
 
+    /**
+     * 多条件组合查询（所有参数均为可选，null/空字符串表示不限制该条件）
+     */
+    @Query("SELECT r FROM NursingRecord r WHERE " +
+           "r.isDeleted = false " +
+           "AND (:clientId IS NULL OR r.clientId = :clientId) " +
+           "AND (:nursingItemId IS NULL OR r.nursingItemId = :nursingItemId) " +
+           "AND (:healthAssistantId IS NULL OR r.healthAssistantId = :healthAssistantId OR :healthAssistantId = '') " +
+           "AND r.nursingTime >= :startTime AND r.nursingTime <= :endTime " +
+           "ORDER BY r.nursingTime DESC")
+    List<NursingRecord> findByConditions(
+            @Param("clientId") Long clientId,
+            @Param("nursingItemId") Long nursingItemId,
+            @Param("healthAssistantId") String healthAssistantId,
+            @Param("startTime") LocalDateTime startTime,
+            @Param("endTime") LocalDateTime endTime);
+
     long countByClientIdAndIsDeletedFalse(Long clientId);
 
     long countByHealthAssistantIdAndIsDeletedFalse(String healthAssistantId);

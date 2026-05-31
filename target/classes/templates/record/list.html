@@ -20,8 +20,29 @@
                         <option value="">全部老人</option>
                     </select>
                 </div>
+                <div class="form-group mr-3">
+                    <label class="mr-2"><i class="fas fa-notes-medical"></i> 项目：</label>
+                    <select class="form-control form-control-sm" id="itemFilter">
+                        <option value="">全部项目</option>
+                    </select>
+                </div>
+                <div class="form-group mr-3">
+                    <label class="mr-2"><i class="fas fa-user-md"></i> 护理员：</label>
+                    <select class="form-control form-control-sm" id="assistantFilter">
+                        <option value="">全部护理员</option>
+                    </select>
+                </div>
+                <div class="form-group mr-3">
+                    <label class="mr-2"><i class="fas fa-calendar-alt"></i> 日期：</label>
+                    <input type="date" class="form-control form-control-sm mr-1" id="startDate" style="width:140px;">
+                    <span class="mr-1">~</span>
+                    <input type="date" class="form-control form-control-sm" id="endDate" style="width:140px;">
+                </div>
                 <button type="button" class="btn btn-primary btn-sm mr-2" id="searchBtn">
                     <i class="fas fa-search"></i> 查询
+                </button>
+                <button type="button" class="btn btn-outline-secondary btn-sm mr-2" id="resetBtn">
+                    <i class="fas fa-undo"></i> 重置
                 </button>
                 <a th:href="@{/page/nursing-records/add}" class="btn btn-success btn-sm">
                     <i class="fas fa-plus"></i> 新增记录
@@ -86,6 +107,9 @@
     <script>
     $(function() {
         var deleteId = null;
+        var COL_SPAN = 8;
+
+        // ========== 初始化：加载下拉框数据 ==========
 
         // 加载老人下拉
         $.get('/api/clients', function(resp) {
@@ -98,35 +122,75 @@
             });
         });
 
-        // 加载护理记录
-        function loadRecords(clientId) {
-            var url = '/api/nursing-records';
-            if (clientId) {
-                url += '?clientId=' + clientId;
+        // 加载护理项目下拉
+        $.get('/api/nursing-items', function(resp) {
+            var items = resp.data || resp || [];
+            var sel = $('#itemFilter');
+            items.forEach(function(item) {
+                if (!item.deleted) {
+                    sel.append('<option value="' + item.id + '">' + item.name + '</option>');
+                }
+            });
+        });
+
+        // 加载护理员（操作员）下拉
+        $.get('/api/operators', function(resp) {
+            var operators = resp.data || resp || [];
+            var sel = $('#assistantFilter');
+            operators.forEach(function(op) {
+                sel.append('<option value="' + op.loginCode + '">' + op.realName + '</option>');
+            });
+        });
+
+        // ========== 组合查询函数 ==========
+
+        function loadRecords(params) {
+            // 构建查询参数
+            var query = [];
+            if (params.clientId) {
+                query.push('clientId=' + encodeURIComponent(params.clientId));
             }
-            showLoading('#recordTableBody', 8);
+            if (params.nursingItemId) {
+                query.push('nursingItemId=' + encodeURIComponent(params.nursingItemId));
+            }
+            if (params.healthAssistantId) {
+                query.push('healthAssistantId=' + encodeURIComponent(params.healthAssistantId));
+            }
+            if (params.startTime) {
+                query.push('startTime=' + encodeURIComponent(params.startTime));
+            }
+            if (params.endTime) {
+                query.push('endTime=' + encodeURIComponent(params.endTime));
+            }
+
+            var url = '/api/nursing-records/search';
+            if (query.length > 0) {
+                url += '?' + query.join('&');
+            }
+
+            showLoading('#recordTableBody', COL_SPAN);
             $.get(url, function(resp) {
                 var records = resp.data || resp || [];
                 var tbody = $('#recordTableBody');
                 tbody.empty();
                 if (records.length === 0) {
-                    showEmpty('#recordTableBody', 8, '暂无护理记录');
+                    showEmpty('#recordTableBody', COL_SPAN, '暂无护理记录');
                     return;
                 }
                 records.forEach(function(r, idx) {
-                    var clientName = r.client ? r.client.name : (r.clientName || '-');
-                    var itemName = r.nursingItem ? r.nursingItem.name : (r.nursingItemName || '-');
+                    var clientName = r.clientName || '-';
+                    var itemName = r.nursingItemName || '-';
                     var nurseName = r.healthAssistantName || r.healthAssistantId || '-';
-                    var time = r.nursingTime || '-';
+                    var time = r.nursingTime ? formatDateTime(r.nursingTime) : '-';
                     tbody.append(
                         '<tr>' +
                             '<td>' + (idx + 1) + '</td>' +
-                            '<td>' + clientName + '</td>' +
-                            '<td>' + itemName + '</td>' +
-                            '<td>' + nurseName + '</td>' +
+                            '<td>' + escapeHtml(clientName) + '</td>' +
+                            '<td>' + escapeHtml(itemName) + '</td>' +
+                            '<td>' + escapeHtml(nurseName) + '</td>' +
                             '<td>' + time + '</td>' +
                             '<td>' + (r.execQuantity || 0) + '</td>' +
-                            '<td>' + (r.remarks || '-') + '</td>' +
+                            '<td>' + (r.remarks ? escapeHtml(r.remarks) : '-') + '</td>' +
                             '<td>' +
                                 '<button class="btn btn-outline-danger btn-sm btn-action delete-btn" data-id="' + r.id + '" title="删除">' +
                                     '<i class="fas fa-trash"></i>' +
@@ -135,15 +199,77 @@
                         '</tr>'
                     );
                 });
+            }).fail(function() {
+                showEmpty('#recordTableBody', COL_SPAN, '加载失败，请稍后重试');
             });
         }
 
-        // 搜索
+        // ========== 收集表单参数并执行查询 ==========
+
+        function doSearch() {
+            var params = {};
+
+            var clientId = $('#clientFilter').val();
+            if (clientId) {
+                params.clientId = clientId;
+            }
+
+            var itemId = $('#itemFilter').val();
+            if (itemId) {
+                params.nursingItemId = itemId;
+            }
+
+            var assistantId = $('#assistantFilter').val();
+            if (assistantId) {
+                params.healthAssistantId = assistantId;
+            }
+
+            var startDate = $('#startDate').val();
+            if (startDate) {
+                params.startTime = startDate + 'T00:00:00';
+            }
+
+            var endDate = $('#endDate').val();
+            if (endDate) {
+                params.endTime = endDate + 'T23:59:59';
+            }
+
+            loadRecords(params);
+        }
+
+        // ========== 重置筛选条件 ==========
+
+        function resetFilters() {
+            $('#clientFilter').val('');
+            $('#itemFilter').val('');
+            $('#assistantFilter').val('');
+            $('#startDate').val('');
+            $('#endDate').val('');
+            // 重置后重新查询（显示全部记录）
+            doSearch();
+        }
+
+        // ========== 事件绑定 ==========
+
+        // 查询按钮
         $('#searchBtn').click(function() {
-            loadRecords($('#clientFilter').val());
+            doSearch();
         });
 
-        // 删除弹窗
+        // 重置按钮
+        $('#resetBtn').click(function() {
+            resetFilters();
+        });
+
+        // 回车键触发查询
+        $(document).keydown(function(e) {
+            if (e.key === 'Enter') {
+                doSearch();
+            }
+        });
+
+        // ========== 删除逻辑 ==========
+
         $(document).on('click', '.delete-btn', function() {
             deleteId = $(this).data('id');
             $('#deleteModal').modal('show');
@@ -157,21 +283,21 @@
                     success: function(resp) {
                         if (resp.code === 200 || resp.success) {
                             $('#deleteModal').modal('hide');
-                            loadRecords($('#clientFilter').val());
+                            doSearch();
                             showToast('删除成功', 'success');
                         } else {
-                            showToast(resp.message || '删除失败', 'danger');
+                            showToast(resp.message || '删除失败', 'error');
                         }
                     },
                     error: function() {
-                        showToast('删除失败，请稍后重试', 'danger');
+                        showToast('删除失败，请稍后重试', 'error');
                     }
                 });
             }
         });
 
-        // 初始加载
-        loadRecords('');
+        // ========== 初始加载（全部记录） ==========
+        doSearch();
     });
     </script>
     </th:block>

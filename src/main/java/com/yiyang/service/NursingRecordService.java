@@ -30,6 +30,13 @@ public interface NursingRecordService {
 
     List<NursingRecord> getRecordsByClientAndDateRange(Long clientId, LocalDateTime start, LocalDateTime end);
 
+    /**
+     * 多条件组合查询（所有参数均为可选）
+     */
+    List<NursingRecord> searchRecords(Long clientId, Long nursingItemId,
+                                      String healthAssistantId,
+                                      LocalDateTime startTime, LocalDateTime endTime);
+
     long getRecordCountByClient(Long clientId);
 
     long getRecordCountByHealthAssistant(String healthAssistantId);

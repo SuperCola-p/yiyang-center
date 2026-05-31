@@ -59,6 +59,29 @@ public class NursingRecordController {
         }
     }
 
+    /**
+     * 多条件组合查询
+     * GET /api/nursing-records/search?clientId=1&nursingItemId=2&healthAssistantId=nurse01&startTime=2026-01-01T00:00&endTime=2026-12-31T23:59
+     * 所有参数均为可选
+     */
+    @GetMapping("/search")
+    public ApiResponse<List<NursingRecord>> search(
+            @RequestParam(required = false) Long clientId,
+            @RequestParam(required = false) Long nursingItemId,
+            @RequestParam(required = false) String healthAssistantId,
+            @RequestParam(required = false) String startTime,
+            @RequestParam(required = false) String endTime) {
+        try {
+            LocalDateTime start = startTime != null ? LocalDateTime.parse(startTime) : null;
+            LocalDateTime end = endTime != null ? LocalDateTime.parse(endTime) : null;
+            List<NursingRecord> records = service.searchRecords(
+                    clientId, nursingItemId, healthAssistantId, start, end);
+            return ApiResponse.success(records);
+        } catch (Exception e) {
+            return ApiResponse.error(e.getMessage());
+        }
+    }
+
     @GetMapping("/client/{clientId}")
     public ApiResponse<List<NursingRecord>> getByClient(@PathVariable Long clientId) {
         try {
