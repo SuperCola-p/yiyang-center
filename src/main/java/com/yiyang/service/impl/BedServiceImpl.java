@@ -138,6 +138,42 @@ public class BedServiceImpl implements BedService {
         Optional<Bed> bedOpt = bedRepository.findById(id);
         if (bedOpt.isPresent()) {
             Bed bed = bedOpt.get();
+            Integer oldStatus = bed.getBedStatus();
+            
+            // ===== 联动：床位状态从占用改为空闲时，清空老人信息 =====
+            if (oldStatus == 2 && bedStatus == 1) {
+                // 查找占用该床位的老人
+                Optional<Client> clientOpt = clientRepository.findByBuildingNoAndRoomNoAndBedNoAndDeletedFalse(
+                        bed.getBuilding(), 
+                        String.valueOf(bed.getRoomNo()), 
+                        bed.getBedNo()
+                );
+                
+                if (clientOpt.isPresent()) {
+                    Client client = clientOpt.get();
+                    client.setBuildingNo(null);
+                    client.setRoomNo(null);
+                    client.setBedNo(null);
+                    clientRepository.save(client);
+                }
+                
+                // 清空床位备注
+                bed.setRemarks(null);
+            }
+            
+            // ===== 联动：床位状态改为占用，但没有备注时，尝试关联老人 =====
+            if (bedStatus == 2 && (bed.getRemarks() == null || bed.getRemarks().isEmpty())) {
+                Optional<Client> clientOpt = clientRepository.findByBuildingNoAndRoomNoAndBedNoAndDeletedFalse(
+                        bed.getBuilding(), 
+                        String.valueOf(bed.getRoomNo()), 
+                        bed.getBedNo()
+                );
+                
+                if (clientOpt.isPresent()) {
+                    bed.setRemarks(clientOpt.get().getName() + "(入住中)");
+                }
+            }
+            
             bed.setBedStatus(bedStatus);
             bedRepository.save(bed);
             return true;

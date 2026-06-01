@@ -46,6 +46,45 @@ public class ClientServiceImpl implements ClientService {
         if (client.getDeleted() == null) {
             client.setDeleted(false);
         }
+        
+        // ===== 联动：新增老人时自动分配床位 =====
+        String building = client.getBuildingNo();
+        String roomNo = client.getRoomNo();
+        String bedNo = client.getBedNo();
+        
+        boolean hasBed = building != null && !building.isEmpty()
+                      && roomNo != null && !roomNo.isEmpty()
+                      && bedNo != null && !bedNo.isEmpty();
+        
+        if (hasBed) {
+            try {
+                Integer roomInt = Integer.parseInt(roomNo);
+                Optional<Bed> bedOpt = bedRepository.findByBuildingAndRoomNoAndBedNo(building, roomInt, bedNo);
+                
+                if (!bedOpt.isPresent()) {
+                    throw new RuntimeException("目标床位不存在：" + building + "-" + roomNo + "-" + bedNo
+                            + "，请先在床位管理中创建该床位");
+                }
+                
+                Bed bed = bedOpt.get();
+                if (bed.getBedStatus() != 1) {
+                    throw new RuntimeException("目标床位已被占用：" + building + "-" + roomNo + "-" + bedNo);
+                }
+                
+                // 先保存老人，获取ID和姓名
+                Client savedClient = clientRepository.save(client);
+                
+                // 占用床位，备注老人姓名
+                bed.setBedStatus(2); // 占用
+                bed.setRemarks(savedClient.getName() + "(入住中)");
+                bedRepository.save(bed);
+                
+                return savedClient;
+            } catch (NumberFormatException e) {
+                throw new RuntimeException("房间号必须为数字：" + roomNo);
+            }
+        }
+        
         return clientRepository.save(client);
     }
 
@@ -147,6 +186,30 @@ public class ClientServiceImpl implements ClientService {
         Optional<Client> clientOpt = clientRepository.findById(id);
         if (clientOpt.isPresent()) {
             Client client = clientOpt.get();
+            
+            // ===== 联动：删除老人时释放床位 =====
+            String building = client.getBuildingNo();
+            String roomNo = client.getRoomNo();
+            String bedNo = client.getBedNo();
+            
+            boolean hasBed = building != null && !building.isEmpty()
+                          && roomNo != null && !roomNo.isEmpty()
+                          && bedNo != null && !bedNo.isEmpty();
+            
+            if (hasBed) {
+                try {
+                    Integer roomInt = Integer.parseInt(roomNo);
+                    bedRepository.findByBuildingAndRoomNoAndBedNo(building, roomInt, bedNo)
+                            .ifPresent(bed -> {
+                                bed.setBedStatus(1); // 空闲
+                                bed.setRemarks(null); // 清空备注
+                                bedRepository.save(bed);
+                            });
+                } catch (NumberFormatException ignored) {
+                    // 房间号解析失败，跳过床位释放
+                }
+            }
+            
             client.setDeleted(true);
             clientRepository.save(client);
             return true;
